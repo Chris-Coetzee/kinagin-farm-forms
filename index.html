@@ -996,8 +996,15 @@
             <option value="Petrol">Petrol</option>
           </select>
         </div>
-        <div class="field"><label>Equipment / Vehicle</label><input type="text" name="equipment" required></div>
-        <div class="field"><label>Litres</label><input type="number" name="litres" step="0.1" required></div>
+        <div class="field"><label>Vehicle</label>
+          <select name="equipment" id="fuelVehicle" required onchange="fuelVehicleChanged()">
+            <option value="">Select vehicle</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Opening Total</label><input type="number" id="openingTotal" name="openingTotal" step="0.1" required oninput="updateFuelLitres()"></div>
+        <div class="field"><label>Closing Total</label><input type="number" id="closingTotal" name="closingTotal" step="0.1" required oninput="updateFuelLitres()"></div>
+        <div class="field"><label>Litres</label><input type="number" id="fuelLitres" name="litres" step="0.1" required></div>
         <div class="field"><label>Hours / Odometer (optional)</label><input type="text" name="hours"></div>
         <div class="field"><label>Filled By</label>
           <select name="operator" required>
@@ -1028,7 +1035,12 @@
             <option>Yuxiu Tang</option>
           </select>
         </div>
-        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <div class="field"><label>Notes</label><textarea name="notes" id="fuelNotes"></textarea></div>
+        <div class="field">
+          <label>Signature</label>
+          <canvas id="fuelSignature" width="600" height="180" style="width:100%; height:140px; border:1px solid #ccc; border-radius:8px; background:#fff; touch-action:none;"></canvas>
+          <button type="button" class="secondary" onclick="clearFuelSignature()">Clear signature</button>
+        </div>
         <button type="submit">Save Fuel Record</button>
         <button type="button" class="secondary" onclick="showHome()">Cancel</button>
       </form>
@@ -1062,8 +1074,8 @@
       document.querySelectorAll('.form-view').forEach(el => el.classList.remove('active'));
       document.getElementById(id).classList.add('active');
       document.getElementById('backBtn').style.display = 'block';
-      // Reset success messages
       document.querySelectorAll('.success').forEach(el => el.style.display = 'none');
+      if (id === 'fuel') setupFuelSignature();
     }
 
     function previewPhoto(input, previewId) {
@@ -1081,11 +1093,25 @@
     function saveForm(event, type) {
       event.preventDefault();
       const form = event.target;
+      if (type === 'fuel') {
+        if (form.equipment.value === 'Other' && !form.notes.value.trim()) {
+          alert('Notes are required when vehicle is Other.');
+          form.notes.focus();
+          return;
+        }
+        if (!fuelSignatureHasInk()) {
+          alert('Please sign before saving.');
+          return;
+        }
+      }
       const formData = new FormData(form);
       const record = { type, timestamp: new Date().toISOString(), id: Date.now() };
       
       for (let [key, value] of formData.entries()) {
         if (key !== 'photo') record[key] = value;
+      }
+      if (type === 'fuel') {
+        record.signature = document.getElementById('fuelSignature').toDataURL('image/jpeg', 0.6);
       }
       
       // Handle photo if present
@@ -1095,12 +1121,12 @@
         reader.onload = e => {
           record.photo = e.target.result;
           storeRecord(record);
-          showSuccess(type);
+          showSuccess(type, form);
         };
         reader.readAsDataURL(photoInput.files[0]);
       } else {
         storeRecord(record);
-        showSuccess(type);
+        showSuccess(type, form);
       }
     }
 
@@ -1143,16 +1169,88 @@
       showHome();
     }
 
-    function showSuccess(type) {
+    function fuelVehicleChanged() {
+      const notes = document.getElementById('fuelNotes');
+      const vehicle = document.getElementById('fuelVehicle').value;
+      if (vehicle === 'Other') notes.setAttribute('required', 'required');
+      else notes.removeAttribute('required');
+    }
+
+    function updateFuelLitres() {
+      const opening = parseFloat(document.getElementById('openingTotal').value);
+      const closing = parseFloat(document.getElementById('closingTotal').value);
+      if (!isNaN(opening) && !isNaN(closing)) {
+        const litres = Math.round((closing - opening) * 10) / 10;
+        document.getElementById('fuelLitres').value = litres >= 0 ? litres : '';
+      }
+    }
+
+    function setupFuelSignature() {
+      const canvas = document.getElementById('fuelSignature');
+      if (!canvas || canvas.dataset.ready) return;
+      canvas.dataset.ready = '1';
+      const ctx = canvas.getContext('2d');
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#1a1a1a';
+      let drawing = false;
+      function pos(e) {
+        const r = canvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return {
+          x: (src.clientX - r.left) * (canvas.width / r.width),
+          y: (src.clientY - r.top) * (canvas.height / r.height)
+        };
+      }
+      function start(e) {
+        drawing = true;
+        const p = pos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        e.preventDefault();
+      }
+      function move(e) {
+        if (!drawing) return;
+        const p = pos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        canvas.dataset.signed = '1';
+        e.preventDefault();
+      }
+      function end() { drawing = false; }
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      canvas.addEventListener('touchend', end);
+    }
+
+    function clearFuelSignature() {
+      const canvas = document.getElementById('fuelSignature');
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      delete canvas.dataset.signed;
+    }
+
+    function fuelSignatureHasInk() {
+      return document.getElementById('fuelSignature').dataset.signed === '1';
+    }
+
+    function showSuccess(type, form) {
       const successEl = document.getElementById(type + 'Success');
       if (successEl) {
         successEl.style.display = 'block';
         setTimeout(() => successEl.style.display = 'none', 4000);
       }
-      event.target.reset();
-      // Reset date to today
-      const dateInput = event.target.querySelector('input[type="date"]');
-      if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+      if (form) {
+        form.reset();
+        const dateInput = form.querySelector('input[type="date"]');
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+      }
+      if (type === 'fuel') {
+        clearFuelSignature();
+        fuelVehicleChanged();
+      }
       document.querySelectorAll('.photo-preview').forEach(img => { img.style.display = 'none'; img.src = ''; });
     }
 

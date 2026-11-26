@@ -25,13 +25,26 @@ function doPost(e) {
       sheet = ss.insertSheet(sheetName);
     }
     
+    const wanted = getHeadersForType(type);
+    let headers;
     if (sheet.getLastRow() === 0) {
-      const headers = getHeadersForType(type);
-      sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+      sheet.appendRow(wanted);
+      sheet.getRange(1, 1, 1, wanted.length).setFontWeight('bold');
+      headers = wanted;
+    } else {
+      headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(function (h) { return String(h); });
+      const missing = wanted.filter(function (h) { return headers.indexOf(h) === -1; });
+      if (missing.length) {
+        sheet.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]);
+        sheet.getRange(1, headers.length + 1, 1, missing.length).setFontWeight('bold');
+        headers = headers.concat(missing);
+      }
     }
-    
-    const row = buildRow(data, type);
+
+    const valuesByHeader = buildValueMap(data, type);
+    const row = headers.map(function (h) {
+      return valuesByHeader[h] !== undefined ? valuesByHeader[h] : '';
+    });
     sheet.appendRow(row);
     
     // Full JSON backup
@@ -70,7 +83,7 @@ function getHeadersForType(type) {
     case 'harvest':
       return ['Timestamp', 'Date', 'Block', 'Variety', 'Quantity', 'Destination', 'EHD Check', 'Recorded By', 'Notes'];
     case 'fuel':
-      return ['Timestamp', 'Date', 'Fuel Type', 'Equipment', 'Litres', 'Hours/Odo', 'Filled By', 'Notes'];
+      return ['Timestamp', 'Date', 'Fuel Type', 'Vehicle', 'Opening Total', 'Closing Total', 'Litres', 'Hours/Odo', 'Filled By', 'Notes', 'Signature'];
     default:
       return ['Timestamp', 'Type', 'Data'];
   }
@@ -106,12 +119,25 @@ function buildRow(data, type) {
       ];
     case 'fuel':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.fuelType), safe(data.equipment), safe(data.litres),
-        safe(data.hours), safe(data.operator), safe(data.notes)
+        safe(data.timestamp), safe(data.date), safe(data.fuelType), safe(data.equipment),
+        safe(data.openingTotal), safe(data.closingTotal), safe(data.litres),
+        safe(data.hours), safe(data.operator), safe(data.notes), safe(data.signature)
       ];
     default:
       return [safe(data.timestamp), type, JSON.stringify(data)];
   }
+}
+
+function buildValueMap(data, type) {
+  const headers = getHeadersForType(type);
+  const values = buildRow(data, type);
+  const map = {};
+  headers.forEach(function (h, i) { map[h] = values[i]; });
+  if (type === 'fuel') {
+    map['Equipment'] = safe(data.equipment);
+    map['Vehicle'] = safe(data.equipment);
+  }
+  return map;
 }
 
 function doGet(e) {

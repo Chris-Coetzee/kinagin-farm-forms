@@ -131,11 +131,21 @@
       html += '</tr></thead><tbody>';
       rows.forEach(function (row) {
         html += '<tr>';
-        headers.forEach(function (h) { html += '<td>' + esc(row[h]) + '</td>'; });
+        headers.forEach(function (h) {
+          html += '<td>' + cellHtml(row[h]) + '</td>';
+        });
         html += '</tr>';
       });
       html += '</tbody></table>';
       area.innerHTML = html;
+    }
+
+    function cellHtml(value) {
+      const text = String(value == null ? '' : value);
+      if (text.indexOf('data:image') === 0) {
+        return '<img alt="Signature" src="' + text + '" style="height:48px; max-width:160px;">';
+      }
+      return esc(text);
     }
 
     function loadRecords() {
