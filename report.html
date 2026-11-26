@@ -6,116 +6,173 @@
   <title>Kinagin Farm – Print Reports</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     h1 { color: #2d6a4f; }
     .controls { background: #e8f5e9; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
-    label { margin-right: 15px; font-weight: bold; }
-    select, input, button { padding: 8px 12px; margin: 5px; font-size: 14px; }
+    label { display: inline-block; margin: 6px 8px 6px 0; font-weight: bold; }
+    select, input, button { padding: 8px 12px; margin: 4px 8px 4px 0; font-size: 14px; }
+    input[type="url"] { width: min(100%, 520px); }
     button { background: #2d6a4f; color: white; border: none; border-radius: 4px; cursor: pointer; }
     button:hover { background: #1b4332; }
     .print-btn { background: #1565c0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; vertical-align: top; }
     th { background: #2d6a4f; color: white; }
     tr:nth-child(even) { background: #f9f9f9; }
+    .error { color: #8a1f11; background: #fdecea; padding: 10px; border-radius: 6px; }
     @media print {
       .controls, button, .no-print { display: none; }
       body { background: white; margin: 0; }
-      .container { box-shadow: none; }
+      .container { box-shadow: none; max-width: none; }
     }
-    .note { color: #666; font-size: 13px; margin-top: 10px; }
+    .note { color: #666; font-size: 13px; margin: 8px 0 0; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Kinagin Farm – Printable Reports</h1>
-    <p class="note">This page is for viewing and printing records. Data comes from your Google Sheet (export or share as needed).</p>
+    <p class="note no-print">Loads the real rows from your Google Sheet. Paste the same Web App URL used in Cloud Sync Settings.</p>
 
     <div class="controls no-print">
-      <label>Report Type:</label>
-      <select id="reportType">
-        <option value="spray">Spray Records</option>
-        <option value="insect">Insect Reports</option>
-        <option value="irrigation">Irrigation</option>
-        <option value="fertigation">Fertigation</option>
-        <option value="harvest">Harvesting</option>
-        <option value="fuel">Diesel & Petrol</option>
-      </select>
-
-      <label>From Date:</label>
-      <input type="date" id="fromDate">
-
-      <label>To Date:</label>
-      <input type="date" id="toDate">
-
-      <button onclick="loadSample()">Load Sample Data</button>
-      <button class="print-btn" onclick="window.print()">Print Report</button>
+      <div>
+        <label for="syncUrl">Web App URL</label>
+        <input type="url" id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec">
+        <button type="button" onclick="saveUrl()">Save URL</button>
+      </div>
+      <div>
+        <label for="reportType">Report Type</label>
+        <select id="reportType">
+          <option value="spray">Spray Records</option>
+          <option value="insect">Insect Reports</option>
+          <option value="irrigation">Irrigation</option>
+          <option value="fertigation">Fertigation</option>
+          <option value="harvest">Harvesting</option>
+          <option value="fuel">Diesel & Petrol</option>
+        </select>
+        <label for="fromDate">From</label>
+        <input type="date" id="fromDate">
+        <label for="toDate">To</label>
+        <input type="date" id="toDate">
+        <button type="button" onclick="loadRecords()">Load records</button>
+        <button type="button" class="print-btn" onclick="window.print()">Print Report</button>
+      </div>
     </div>
 
     <div id="reportArea">
-      <p>Select a report type and dates, then click “Load Sample Data” to preview (replace with real data export later).</p>
+      <p>Paste your Web App URL, choose a report, then click Load records.</p>
     </div>
   </div>
 
   <script>
-    // Sample data for preview – replace with real Google Sheet export or Apps Script fetch later
-    const sampleData = {
-      spray: [
-        { date: '2026-11-20', block: 'Mac 1a', crop: 'Macadamia', product: 'Example Spray', rate: '2 L/ha', quantity: '40 L', applicator: 'Chris Coetzee', windSpeed: '5', windDirection: 'North East', notes: 'Morning spray' },
-        { date: '2026-11-21', block: 'Avo 3', crop: 'Avocado', product: 'Another Product', rate: '1.5 L/ha', quantity: '25 L', applicator: 'Wayne Taylor', windSpeed: '3', windDirection: 'East', notes: '' }
-      ],
-      insect: [
-        { date: '2026-11-20', block: 'Mac 5', trapId: 'T12', pest: 'Fruit fly', count: '8', recorder: 'James Ruben', notes: 'High count' }
-      ],
-      irrigation: [
-        { date: '2026-11-19', block: 'Mac 10', duration: '4.5', volume: '12000 L', method: 'Drip', operator: 'Michael Willie', notes: '' }
-      ],
-      fertigation: [
-        { date: '2026-11-18', block: 'Avo 7', product: 'NPK', rate: '20 kg', method: 'Fertigation', operator: 'Ken Liang', notes: '' }
-      ],
-      harvest: [
-        { date: '2026-11-15', block: 'Mac 2a', variety: 'Macadamia', quantity: '45 bins', destination: 'Packhouse', recorder: 'Chris Coetzee', notes: '' }
-      ],
-      fuel: [
-        { date: '2026-11-22', fuelType: 'Diesel', equipment: 'Tractor 1', litres: '85', operator: 'Bill Atyson', notes: '' }
-      ]
+    const titles = {
+      spray: 'Spray Records',
+      insect: 'Insect Reports',
+      irrigation: 'Irrigation',
+      fertigation: 'Fertigation',
+      harvest: 'Harvesting',
+      fuel: 'Diesel & Petrol'
     };
 
-    function loadSample() {
-      const type = document.getElementById('reportType').value;
-      const from = document.getElementById('fromDate').value;
-      const to = document.getElementById('toDate').value;
-      const data = sampleData[type] || [];
+    const saved = localStorage.getItem('kinaginSyncUrl') || '';
+    document.getElementById('syncUrl').value = saved;
 
-      let html = `<h2>${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2>`;
-      if (from || to) html += `<p>Period: ${from || 'Start'} to ${to || 'End'}</p>`;
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('toDate').value = today;
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    document.getElementById('fromDate').value = monthAgo.toISOString().split('T')[0];
 
-      if (data.length === 0) {
-        document.getElementById('reportArea').innerHTML = '<p>No sample data for this type.</p>';
+    function saveUrl() {
+      const url = document.getElementById('syncUrl').value.trim();
+      if (!url) {
+        localStorage.removeItem('kinaginSyncUrl');
         return;
       }
+      localStorage.setItem('kinaginSyncUrl', url);
+    }
 
+    function esc(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+    }
+
+    function rowDate(row) {
+      const raw = row.Date || row.date || row.Timestamp || '';
+      const match = String(raw).match(/\d{4}-\d{2}-\d{2}/);
+      return match ? match[0] : '';
+    }
+
+    function render(type, from, to, payload) {
+      const area = document.getElementById('reportArea');
+      if (!payload || payload.status === 'error') {
+        area.innerHTML = '<p class="error">' + esc(payload && payload.message ? payload.message : 'Could not load records.') + '</p>';
+        return;
+      }
+      let rows = payload.rows || [];
+      rows = rows.filter(function (row) {
+        const d = rowDate(row);
+        if (!d) return true;
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+        return true;
+      });
+      const headers = (payload.headers && payload.headers.length) ? payload.headers : (rows[0] ? Object.keys(rows[0]) : []);
+      let html = '<h2>' + esc(titles[type] || type) + '</h2>';
+      html += '<p>Period: ' + esc(from || 'start') + ' to ' + esc(to || 'end') + ' · ' + rows.length + ' record' + (rows.length === 1 ? '' : 's') + '</p>';
+      if (!rows.length) {
+        html += '<p>No records in this date range.</p>';
+        area.innerHTML = html;
+        return;
+      }
       html += '<table><thead><tr>';
-      const headers = Object.keys(data[0]);
-      headers.forEach(h => html += `<th>${h}</th>`);
+      headers.forEach(function (h) { html += '<th>' + esc(h) + '</th>'; });
       html += '</tr></thead><tbody>';
-
-      data.forEach(row => {
+      rows.forEach(function (row) {
         html += '<tr>';
-        headers.forEach(h => html += `<td>${row[h] || ''}</td>`);
+        headers.forEach(function (h) { html += '<td>' + esc(row[h]) + '</td>'; });
         html += '</tr>';
       });
       html += '</tbody></table>';
-
-      document.getElementById('reportArea').innerHTML = html;
+      area.innerHTML = html;
     }
 
-    // Set default dates
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('toDate').value = today;
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    document.getElementById('fromDate').value = weekAgo.toISOString().split('T')[0];
+    function loadRecords() {
+      saveUrl();
+      const url = document.getElementById('syncUrl').value.trim();
+      const type = document.getElementById('reportType').value;
+      const from = document.getElementById('fromDate').value;
+      const to = document.getElementById('toDate').value;
+      const area = document.getElementById('reportArea');
+      if (!url) {
+        area.innerHTML = '<p class="error">Paste the Google Apps Script Web App URL first (the same one used in Cloud Sync Settings).</p>';
+        return;
+      }
+      area.innerHTML = '<p>Loading records from the sheet…</p>';
+      const cbName = 'kinaginReportCb_' + Date.now();
+      const script = document.createElement('script');
+      const timer = setTimeout(function () {
+        cleanup();
+        area.innerHTML = '<p class="error">No reply from the sheet. Redeploy the Apps Script (Deploy → Manage deployments → New version) so reports can be read, then try again.</p>';
+      }, 20000);
+      function cleanup() {
+        clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[cbName] = function (data) {
+        cleanup();
+        render(type, from, to, data);
+      };
+      script.onerror = function () {
+        cleanup();
+        area.innerHTML = '<p class="error">Could not reach the Web App URL. Check it ends with /exec and that the deployment access is Anyone.</p>';
+      };
+      const join = url.indexOf('?') === -1 ? '?' : '&';
+      script.src = url + join + 'type=' + encodeURIComponent(type) + '&callback=' + cbName;
+      document.body.appendChild(script);
+    }
   </script>
 </body>
 </html>

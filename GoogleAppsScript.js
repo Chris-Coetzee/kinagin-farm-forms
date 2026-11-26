@@ -115,5 +115,60 @@ function buildRow(data, type) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput('Kinagin Farm Forms endpoint is running');
+  try {
+    const params = (e && e.parameter) ? e.parameter : {};
+    const type = (params.type || '').toLowerCase();
+    const callback = params.callback || '';
+    const sheetNames = {
+      'spray': 'Spray Records',
+      'insect': 'Insect Reports',
+      'irrigation': 'Irrigation',
+      'fertigation': 'Fertigation',
+      'harvest': 'Harvesting',
+      'fuel': 'Diesel & Petrol'
+    };
+
+    let result;
+    if (!type || !sheetNames[type]) {
+      result = { status: 'ok', message: 'Kinagin Farm Forms endpoint is running' };
+    } else {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const sheet = ss.getSheetByName(sheetNames[type]);
+      if (!sheet || sheet.getLastRow() < 2) {
+        result = { status: 'ok', type: type, sheet: sheetNames[type], headers: [], rows: [] };
+      } else {
+        const values = sheet.getDataRange().getValues();
+        const headers = values[0].map(function (h) { return String(h); });
+        const tz = Session.getScriptTimeZone();
+        const rows = values.slice(1).filter(function (r) {
+          return r.some(function (cell) { return cell !== '' && cell !== null; });
+        }).map(function (r) {
+          const obj = {};
+          headers.forEach(function (h, i) {
+            const cell = r[i];
+            if (cell instanceof Date) {
+              obj[h] = Utilities.formatDate(cell, tz, 'yyyy-MM-dd');
+            } else {
+              obj[h] = cell === null || cell === undefined ? '' : cell;
+            }
+          });
+          return obj;
+        });
+        result = { status: 'ok', type: type, sheet: sheetNames[type], headers: headers, rows: rows };
+      }
+    }
+
+    const text = JSON.stringify(result);
+    if (callback && /^[A-Za-z0-9_]+$/.test(callback)) {
+      return ContentService
+        .createTextOutput(callback + '(' + text + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService
+      .createTextOutput(text)
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    const text = JSON.stringify({ status: 'error', message: err.toString() });
+    return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.JSON);
+  }
 }
