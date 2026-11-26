@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2d6a4f">
+  <title>Kinagin Farm Forms</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f0; color: #1a1a1a; min-height: 100vh; }
+    header { background: #2d6a4f; color: white; padding: 16px; text-align: center; position: sticky; top: 0; z-index: 100; }
+    header h1 { font-size: 1.3rem; }
+    header p { font-size: 0.85rem; opacity: 0.9; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .home-grid { display: grid; gap: 12px; }
+    .form-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.15s; border-left: 5px solid #2d6a4f; }
+    .form-card:active { transform: scale(0.98); }
+    .form-card h2 { font-size: 1.1rem; color: #2d6a4f; margin-bottom: 4px; }
+    .form-card p { font-size: 0.85rem; color: #666; }
+    .form-view { display: none; }
+    .form-view.active { display: block; }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; background: white; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { background: #2d6a4f; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; width: 100%; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #6c757d; margin-top: 8px; }
+    button.danger { background: #c0392b; }
+    .photo-preview { max-width: 100%; margin-top: 8px; border-radius: 8px; }
+    .back-btn { background: transparent; color: white; border: none; font-size: 1.2rem; position: absolute; left: 16px; top: 16px; cursor: pointer; }
+    .success { background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; }
+    .records-list { background: white; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .record-item { border-bottom: 1px solid #eee; padding: 12px 0; font-size: 0.9rem; }
+    .record-item:last-child { border: none; }
+    footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #666; }
+    @media (max-width: 480px) { .container { padding: 12px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="back-btn" id="backBtn" style="display:none;" onclick="showHome()">←</button>
+    <h1>Kinagin Farm Forms</h1>
+    <p>Field records for employees</p>
+  </header>
+
+  <div class="container">
+    <!-- Home Screen -->
+    <div id="home" class="home-grid">
+      <div class="form-card" onclick="openForm('spray')">
+        <h2>Spray Records</h2>
+        <p>Chemical applications – Freshcare compliant</p>
+      </div>
+      <div class="form-card" onclick="openForm('insect')">
+        <h2>Insect Reports</h2>
+        <p>Trap counts from orchard blocks</p>
+      </div>
+      <div class="form-card" onclick="openForm('irrigation')">
+        <h2>Irrigation Records</h2>
+        <p>Water applied to blocks</p>
+      </div>
+      <div class="form-card" onclick="openForm('fertigation')">
+        <h2>Fertigation of Blocks</h2>
+        <p>Fertiliser applications via irrigation</p>
+      </div>
+      <div class="form-card" onclick="openForm('harvest')">
+        <h2>Harvesting Records</h2>
+        <p>Yield, variety and destination</p>
+      </div>
+      <div class="form-card" onclick="openForm('fuel')">
+        <h2>Diesel & Petrol</h2>
+        <p>Fuel usage by equipment</p>
+      </div>
+      <div class="form-card" onclick="showRecords()">
+        <h2>View Saved Records</h2>
+        <p>All submissions stored on this phone</p>
+      </div>
+      <div class="form-card" onclick="showSettings()">
+        <h2>Cloud Sync Settings</h2>
+        <p>Connect to shared Google Sheet</p>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="form-view">
+      <h2 style="margin-bottom:12px;">Cloud Sync</h2>
+      <div class="field">
+        <label>Google Apps Script Web App URL</label>
+        <input type="url" id="syncUrl" placeholder="Paste the Web App URL here" value="">
+      </div>
+      <p style="font-size:0.85rem; color:#666; margin-bottom:16px;">
+        Once set, every new record will be sent to your shared Google Sheet when the phone has internet. Local copy is always kept.
+      </p>
+      <button onclick="saveSyncUrl()">Save Sync URL</button>
+      <button class="secondary" onclick="showHome()">Back</button>
+    </div>
+
+    <!-- Spray Form -->
+    <div id="spray" class="form-view">
+      <div class="success" id="spraySuccess">Spray record saved successfully.</div>
+      <form onsubmit="saveForm(event, 'spray')">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Start Time</label><input type="time" name="startTime" required></div>
+        <div class="field"><label>Finish Time</label><input type="time" name="finishTime"></div>
+        <div class="field"><label>Block / Location</label>
+          <select name="block" required>
+            <option value="">Select block</option>
+            <optgroup label="Macadamia">
+              <option>Mac 1a</option>
+              <option>Mac 1b</option>
+              <option>Mac 2a</option>
+              <option>Mac 2b</option>
+              <option>Mac 3</option>
+              <option>Mac 4</option>
+              <option>Mac 5</option>
+              <option>mac 6</option>
+              <option>Mac 7</option>
+              <option>Mac 8</option>
+              <option>Mac 9</option>
+              <option>Mac 10</option>
+              <option>Mac 11</option>
+              <option>Mac 12</option>
+              <option>Mac 13</option>
+              <option>Mac 14</option>
+              <option>Mac 15</option>
+              <option>Mac 16</option>
+              <option>Mac 17</option>
+              <option>Mac 18</option>
+              <option>Mac 19</option>
+              <option>Mac 20</option>
+              <option>Mac 21</option>
+              <option>Mac 22</option>
+              <option>Mac 23</option>
+              <option>Mac 24</option>
+              <option>Mac 25</option>
+              <option>Mac 26</option>
+              <option>Mac 27</option>
+              <option>Mac 28</option>
+              <option>Mac 29</option>
+              <option>Mac 30</option>
+              <option>Mac 31</option>
+              <option>Mac 32</option>
+              <option>Mac 33</option>
+              <option>Mac 34</option>
+              <option>Mac 35</option>
+              <option>Mac 36</option>
+              <option>Mac 37</option>
+              <option>Mac 38</option>
+              <option>Mac 39</option>
+              <option>Mac 40</option>
+              <option>Mac 41</option>
+              <option>Mac 42</option>
+              <option>Mac 43</option>
+              <option>Mac 44</option>
+              <option>Mac 45</option>
+              <option>Mac 46</option>
+              <option>Mac 47</option>
+              <option>Mac 48</option>
+              <option>Mac 49</option>
+              <option>Mac 50</option>
+              <option>Mac 51</option>
+              <option>Mac 52</option>
+              <option>Mac 53</option>
+              <option>Mac 54</option>
+              <option>Mac 55</option>
+              <option>Mac 56</option>
+              <option>Mac 57</option>
+              <option>Max 58</option>
+              <option>Mac 59</option>
+              <option>Mac 60</option>
+              <option>Mac 61</option>
+              <option>Mac 62</option>
+              <option>Mac 63</option>
+              <option>Mac 64</option>
+              <option>Mac 65</option>
+              <option>Mac 66</option>
+              <option>Mac 67</option>
+              <option>Mac 68</option>
+              <option>Mac 69</option>
+              <option>Mac 70</option>
+              <option>Mac 71</option>
+              <option>Mac 72</option>
+            </optgroup>
+            <optgroup label="Avocado">
+              <option>Avo 1</option>
+              <option>Avo 2</option>
+              <option>Avo 3</option>
+              <option>Avo 4</option>
+              <option>Avo.5</option>
+              <option>Avo 6</option>
+              <option>Avo 7</option>
+              <option>Avo.8</option>
+              <option>Avo 9</option>
+              <option>Avo 10</option>
+              <option>Avo 11</option>
+              <option>Avo 12</option>
+              <option>Avo 13</option>
+              <option>Avo 14</option>
+              <option>Avo 15</option>
+              <option>Avo 16</option>
+              <option>Avo 17</option>
+              <option>Avo 18</option>
+              <option>Avo 19</option>
+              <option>Avo 20</option>
+              <option>Avo 21</option>
+              <option>Avo 22</option>
+              <option>Avo 23</option>
+              <option>Avo 24</option>
+              <option>Avo 25</option>
+              <option>Avo 26</option>
+              <option>Avo 27</option>
+              <option>Avo 28</option>
+              <option>Avo 29</option>
+              <option>Avo 30</option>
+              <option>Avo 31</option>
+              <option>Avo 32</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label>Crop / Variety</label>
+          <select name="crop" required>
+            <option value="">Select crop</option>
+            <option>Macadamia</option>
+            <option>Avocado</option>
+          </select>
+        </div>
+        <div class="field"><label>Product Name</label><input type="text" name="product" required></div>
+        <div class="field"><label>Batch Number</label><input type="text" name="batch"></div>
+        <div class="field"><label>Target Pest / Disease</label><input type="text" name="target"></div>
+        <div class="field"><label>Rate (per ha or as labelled)</label><input type="text" name="rate" required></div>
+        <div class="field"><label>Quantity Applied</label><input type="text" name="quantity" required></div>
+        <div class="field"><label>Equipment Used</label><input type="text" name="equipment" placeholder="e.g. Airblast sprayer"></div>
+        <div class="field"><label>Wind Speed</label>
+          <select name="windSpeed">
+            <option value="">Select speed</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+            <option>7</option>
+            <option>8</option>
+            <option>9</option>
+            <option>10</option>
+            <option>11</option>
+            <option>12</option>
+            <option>13</option>
+            <option>14</option>
+            <option>15</option>
+            <option>16</option>
+            <option>17</option>
+            <option>18</option>
+            <option>19</option>
+            <option>20</option>
+          </select>
+        </div>
+        <div class="field"><label>Wind Direction</label>
+          <select name="windDirection">
+            <option value="">Select direction</option>
+            <option>North</option>
+            <option>North East</option>
+            <option>East</option>
+            <option>South East</option>
+            <option>South</option>
+            <option>South West</option>
+            <option>West</option>
+            <option>North West</option>
+          </select>
+        </div>
+        <div class="field"><label>Withholding Period (days) or Earliest Harvest Date</label><input type="text" name="whp"></div>
+        <div class="field"><label>Applicator Name</label>
+          <select name="applicator" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <div class="field"><label>Photo (optional)</label><input type="file" name="photo" accept="image/*" capture="environment" onchange="previewPhoto(this, 'sprayPreview')"></div>
+        <img id="sprayPreview" class="photo-preview" style="display:none;">
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <button type="submit">Save Spray Record</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Insect Form -->
+    <div id="insect" class="form-view">
+      <div class="success" id="insectSuccess">Insect report saved.</div>
+      <form onsubmit="saveForm(event, 'insect')">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Block</label>
+          <select name="block" required>
+            <option value="">Select block</option>
+            <optgroup label="Macadamia">
+              <option>Mac 1a</option>
+              <option>Mac 1b</option>
+              <option>Mac 2a</option>
+              <option>Mac 2b</option>
+              <option>Mac 3</option>
+              <option>Mac 4</option>
+              <option>Mac 5</option>
+              <option>mac 6</option>
+              <option>Mac 7</option>
+              <option>Mac 8</option>
+              <option>Mac 9</option>
+              <option>Mac 10</option>
+              <option>Mac 11</option>
+              <option>Mac 12</option>
+              <option>Mac 13</option>
+              <option>Mac 14</option>
+              <option>Mac 15</option>
+              <option>Mac 16</option>
+              <option>Mac 17</option>
+              <option>Mac 18</option>
+              <option>Mac 19</option>
+              <option>Mac 20</option>
+              <option>Mac 21</option>
+              <option>Mac 22</option>
+              <option>Mac 23</option>
+              <option>Mac 24</option>
+              <option>Mac 25</option>
+              <option>Mac 26</option>
+              <option>Mac 27</option>
+              <option>Mac 28</option>
+              <option>Mac 29</option>
+              <option>Mac 30</option>
+              <option>Mac 31</option>
+              <option>Mac 32</option>
+              <option>Mac 33</option>
+              <option>Mac 34</option>
+              <option>Mac 35</option>
+              <option>Mac 36</option>
+              <option>Mac 37</option>
+              <option>Mac 38</option>
+              <option>Mac 39</option>
+              <option>Mac 40</option>
+              <option>Mac 41</option>
+              <option>Mac 42</option>
+              <option>Mac 43</option>
+              <option>Mac 44</option>
+              <option>Mac 45</option>
+              <option>Mac 46</option>
+              <option>Mac 47</option>
+              <option>Mac 48</option>
+              <option>Mac 49</option>
+              <option>Mac 50</option>
+              <option>Mac 51</option>
+              <option>Mac 52</option>
+              <option>Mac 53</option>
+              <option>Mac 54</option>
+              <option>Mac 55</option>
+              <option>Mac 56</option>
+              <option>Mac 57</option>
+              <option>Max 58</option>
+              <option>Mac 59</option>
+              <option>Mac 60</option>
+              <option>Mac 61</option>
+              <option>Mac 62</option>
+              <option>Mac 63</option>
+              <option>Mac 64</option>
+              <option>Mac 65</option>
+              <option>Mac 66</option>
+              <option>Mac 67</option>
+              <option>Mac 68</option>
+              <option>Mac 69</option>
+              <option>Mac 70</option>
+              <option>Mac 71</option>
+              <option>Mac 72</option>
+            </optgroup>
+            <optgroup label="Avocado">
+              <option>Avo 1</option>
+              <option>Avo 2</option>
+              <option>Avo 3</option>
+              <option>Avo 4</option>
+              <option>Avo.5</option>
+              <option>Avo 6</option>
+              <option>Avo 7</option>
+              <option>Avo.8</option>
+              <option>Avo 9</option>
+              <option>Avo 10</option>
+              <option>Avo 11</option>
+              <option>Avo 12</option>
+              <option>Avo 13</option>
+              <option>Avo 14</option>
+              <option>Avo 15</option>
+              <option>Avo 16</option>
+              <option>Avo 17</option>
+              <option>Avo 18</option>
+              <option>Avo 19</option>
+              <option>Avo 20</option>
+              <option>Avo 21</option>
+              <option>Avo 22</option>
+              <option>Avo 23</option>
+              <option>Avo 24</option>
+              <option>Avo 25</option>
+              <option>Avo 26</option>
+              <option>Avo 27</option>
+              <option>Avo 28</option>
+              <option>Avo 29</option>
+              <option>Avo 30</option>
+              <option>Avo 31</option>
+              <option>Avo 32</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label>Trap ID / Location</label><input type="text" name="trapId" required></div>
+        <div class="field"><label>Pest Type</label><input type="text" name="pest" placeholder="e.g. Fruit fly, Moth"></div>
+        <div class="field"><label>Count</label><input type="number" name="count" min="0" required></div>
+        <div class="field"><label>Photo of Trap</label><input type="file" name="photo" accept="image/*" capture="environment" onchange="previewPhoto(this, 'insectPreview')"></div>
+        <img id="insectPreview" class="photo-preview" style="display:none;">
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <div class="field"><label>Recorded By</label>
+          <select name="recorder" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <button type="submit">Save Insect Report</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Irrigation Form -->
+    <div id="irrigation" class="form-view">
+      <div class="success" id="irrigationSuccess">Irrigation record saved.</div>
+      <form onsubmit="saveForm(event, 'irrigation')">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Block</label>
+          <select name="block" required>
+            <option value="">Select block</option>
+            <optgroup label="Macadamia">
+              <option>Mac 1a</option>
+              <option>Mac 1b</option>
+              <option>Mac 2a</option>
+              <option>Mac 2b</option>
+              <option>Mac 3</option>
+              <option>Mac 4</option>
+              <option>Mac 5</option>
+              <option>mac 6</option>
+              <option>Mac 7</option>
+              <option>Mac 8</option>
+              <option>Mac 9</option>
+              <option>Mac 10</option>
+              <option>Mac 11</option>
+              <option>Mac 12</option>
+              <option>Mac 13</option>
+              <option>Mac 14</option>
+              <option>Mac 15</option>
+              <option>Mac 16</option>
+              <option>Mac 17</option>
+              <option>Mac 18</option>
+              <option>Mac 19</option>
+              <option>Mac 20</option>
+              <option>Mac 21</option>
+              <option>Mac 22</option>
+              <option>Mac 23</option>
+              <option>Mac 24</option>
+              <option>Mac 25</option>
+              <option>Mac 26</option>
+              <option>Mac 27</option>
+              <option>Mac 28</option>
+              <option>Mac 29</option>
+              <option>Mac 30</option>
+              <option>Mac 31</option>
+              <option>Mac 32</option>
+              <option>Mac 33</option>
+              <option>Mac 34</option>
+              <option>Mac 35</option>
+              <option>Mac 36</option>
+              <option>Mac 37</option>
+              <option>Mac 38</option>
+              <option>Mac 39</option>
+              <option>Mac 40</option>
+              <option>Mac 41</option>
+              <option>Mac 42</option>
+              <option>Mac 43</option>
+              <option>Mac 44</option>
+              <option>Mac 45</option>
+              <option>Mac 46</option>
+              <option>Mac 47</option>
+              <option>Mac 48</option>
+              <option>Mac 49</option>
+              <option>Mac 50</option>
+              <option>Mac 51</option>
+              <option>Mac 52</option>
+              <option>Mac 53</option>
+              <option>Mac 54</option>
+              <option>Mac 55</option>
+              <option>Mac 56</option>
+              <option>Mac 57</option>
+              <option>Max 58</option>
+              <option>Mac 59</option>
+              <option>Mac 60</option>
+              <option>Mac 61</option>
+              <option>Mac 62</option>
+              <option>Mac 63</option>
+              <option>Mac 64</option>
+              <option>Mac 65</option>
+              <option>Mac 66</option>
+              <option>Mac 67</option>
+              <option>Mac 68</option>
+              <option>Mac 69</option>
+              <option>Mac 70</option>
+              <option>Mac 71</option>
+              <option>Mac 72</option>
+            </optgroup>
+            <optgroup label="Avocado">
+              <option>Avo 1</option>
+              <option>Avo 2</option>
+              <option>Avo 3</option>
+              <option>Avo 4</option>
+              <option>Avo.5</option>
+              <option>Avo 6</option>
+              <option>Avo 7</option>
+              <option>Avo.8</option>
+              <option>Avo 9</option>
+              <option>Avo 10</option>
+              <option>Avo 11</option>
+              <option>Avo 12</option>
+              <option>Avo 13</option>
+              <option>Avo 14</option>
+              <option>Avo 15</option>
+              <option>Avo 16</option>
+              <option>Avo 17</option>
+              <option>Avo 18</option>
+              <option>Avo 19</option>
+              <option>Avo 20</option>
+              <option>Avo 21</option>
+              <option>Avo 22</option>
+              <option>Avo 23</option>
+              <option>Avo 24</option>
+              <option>Avo 25</option>
+              <option>Avo 26</option>
+              <option>Avo 27</option>
+              <option>Avo 28</option>
+              <option>Avo 29</option>
+              <option>Avo 30</option>
+              <option>Avo 31</option>
+              <option>Avo 32</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label>Duration (hours)</label><input type="number" name="duration" step="0.1" required></div>
+        <div class="field"><label>Volume (litres or mm)</label><input type="text" name="volume"></div>
+        <div class="field"><label>Method</label><input type="text" name="method" placeholder="e.g. Drip, Sprinkler"></div>
+        <div class="field"><label>Operator</label>
+          <select name="operator" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <button type="submit">Save Irrigation Record</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Fertigation Form -->
+    <div id="fertigation" class="form-view">
+      <div class="success" id="fertigationSuccess">Fertigation record saved.</div>
+      <form onsubmit="saveForm(event, 'fertigation')">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Block</label>
+          <select name="block" required>
+            <option value="">Select block</option>
+            <optgroup label="Macadamia">
+              <option>Mac 1a</option>
+              <option>Mac 1b</option>
+              <option>Mac 2a</option>
+              <option>Mac 2b</option>
+              <option>Mac 3</option>
+              <option>Mac 4</option>
+              <option>Mac 5</option>
+              <option>mac 6</option>
+              <option>Mac 7</option>
+              <option>Mac 8</option>
+              <option>Mac 9</option>
+              <option>Mac 10</option>
+              <option>Mac 11</option>
+              <option>Mac 12</option>
+              <option>Mac 13</option>
+              <option>Mac 14</option>
+              <option>Mac 15</option>
+              <option>Mac 16</option>
+              <option>Mac 17</option>
+              <option>Mac 18</option>
+              <option>Mac 19</option>
+              <option>Mac 20</option>
+              <option>Mac 21</option>
+              <option>Mac 22</option>
+              <option>Mac 23</option>
+              <option>Mac 24</option>
+              <option>Mac 25</option>
+              <option>Mac 26</option>
+              <option>Mac 27</option>
+              <option>Mac 28</option>
+              <option>Mac 29</option>
+              <option>Mac 30</option>
+              <option>Mac 31</option>
+              <option>Mac 32</option>
+              <option>Mac 33</option>
+              <option>Mac 34</option>
+              <option>Mac 35</option>
+              <option>Mac 36</option>
+              <option>Mac 37</option>
+              <option>Mac 38</option>
+              <option>Mac 39</option>
+              <option>Mac 40</option>
+              <option>Mac 41</option>
+              <option>Mac 42</option>
+              <option>Mac 43</option>
+              <option>Mac 44</option>
+              <option>Mac 45</option>
+              <option>Mac 46</option>
+              <option>Mac 47</option>
+              <option>Mac 48</option>
+              <option>Mac 49</option>
+              <option>Mac 50</option>
+              <option>Mac 51</option>
+              <option>Mac 52</option>
+              <option>Mac 53</option>
+              <option>Mac 54</option>
+              <option>Mac 55</option>
+              <option>Mac 56</option>
+              <option>Mac 57</option>
+              <option>Max 58</option>
+              <option>Mac 59</option>
+              <option>Mac 60</option>
+              <option>Mac 61</option>
+              <option>Mac 62</option>
+              <option>Mac 63</option>
+              <option>Mac 64</option>
+              <option>Mac 65</option>
+              <option>Mac 66</option>
+              <option>Mac 67</option>
+              <option>Mac 68</option>
+              <option>Mac 69</option>
+              <option>Mac 70</option>
+              <option>Mac 71</option>
+              <option>Mac 72</option>
+            </optgroup>
+            <optgroup label="Avocado">
+              <option>Avo 1</option>
+              <option>Avo 2</option>
+              <option>Avo 3</option>
+              <option>Avo 4</option>
+              <option>Avo.5</option>
+              <option>Avo 6</option>
+              <option>Avo 7</option>
+              <option>Avo.8</option>
+              <option>Avo 9</option>
+              <option>Avo 10</option>
+              <option>Avo 11</option>
+              <option>Avo 12</option>
+              <option>Avo 13</option>
+              <option>Avo 14</option>
+              <option>Avo 15</option>
+              <option>Avo 16</option>
+              <option>Avo 17</option>
+              <option>Avo 18</option>
+              <option>Avo 19</option>
+              <option>Avo 20</option>
+              <option>Avo 21</option>
+              <option>Avo 22</option>
+              <option>Avo 23</option>
+              <option>Avo 24</option>
+              <option>Avo 25</option>
+              <option>Avo 26</option>
+              <option>Avo 27</option>
+              <option>Avo 28</option>
+              <option>Avo 29</option>
+              <option>Avo 30</option>
+              <option>Avo 31</option>
+              <option>Avo 32</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label>Product</label><input type="text" name="product" required></div>
+        <div class="field"><label>Rate / Quantity</label><input type="text" name="rate" required></div>
+        <div class="field"><label>Method of Application</label><input type="text" name="method" value="Fertigation"></div>
+        <div class="field"><label>Wind Speed (if applicable)</label>
+          <select name="windSpeed">
+            <option value="">Select speed</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+            <option>7</option>
+            <option>8</option>
+            <option>9</option>
+            <option>10</option>
+            <option>11</option>
+            <option>12</option>
+            <option>13</option>
+            <option>14</option>
+            <option>15</option>
+            <option>16</option>
+            <option>17</option>
+            <option>18</option>
+            <option>19</option>
+            <option>20</option>
+          </select>
+        </div>
+        <div class="field"><label>Wind Direction (if applicable)</label>
+          <select name="windDirection">
+            <option value="">Select direction</option>
+            <option>North</option>
+            <option>North East</option>
+            <option>East</option>
+            <option>South East</option>
+            <option>South</option>
+            <option>South West</option>
+            <option>West</option>
+            <option>North West</option>
+          </select>
+        </div>
+        <div class="field"><label>Operator</label>
+          <select name="operator" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <button type="submit">Save Fertigation Record</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Harvest Form -->
+    <div id="harvest" class="form-view">
+      <div class="success" id="harvestSuccess">Harvest record saved.</div>
+      <form onsubmit="saveForm(event, 'harvest')">
+        <div class="field"><label>Harvest Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Block</label>
+          <select name="block" required>
+            <option value="">Select block</option>
+            <optgroup label="Macadamia">
+              <option>Mac 1a</option>
+              <option>Mac 1b</option>
+              <option>Mac 2a</option>
+              <option>Mac 2b</option>
+              <option>Mac 3</option>
+              <option>Mac 4</option>
+              <option>Mac 5</option>
+              <option>mac 6</option>
+              <option>Mac 7</option>
+              <option>Mac 8</option>
+              <option>Mac 9</option>
+              <option>Mac 10</option>
+              <option>Mac 11</option>
+              <option>Mac 12</option>
+              <option>Mac 13</option>
+              <option>Mac 14</option>
+              <option>Mac 15</option>
+              <option>Mac 16</option>
+              <option>Mac 17</option>
+              <option>Mac 18</option>
+              <option>Mac 19</option>
+              <option>Mac 20</option>
+              <option>Mac 21</option>
+              <option>Mac 22</option>
+              <option>Mac 23</option>
+              <option>Mac 24</option>
+              <option>Mac 25</option>
+              <option>Mac 26</option>
+              <option>Mac 27</option>
+              <option>Mac 28</option>
+              <option>Mac 29</option>
+              <option>Mac 30</option>
+              <option>Mac 31</option>
+              <option>Mac 32</option>
+              <option>Mac 33</option>
+              <option>Mac 34</option>
+              <option>Mac 35</option>
+              <option>Mac 36</option>
+              <option>Mac 37</option>
+              <option>Mac 38</option>
+              <option>Mac 39</option>
+              <option>Mac 40</option>
+              <option>Mac 41</option>
+              <option>Mac 42</option>
+              <option>Mac 43</option>
+              <option>Mac 44</option>
+              <option>Mac 45</option>
+              <option>Mac 46</option>
+              <option>Mac 47</option>
+              <option>Mac 48</option>
+              <option>Mac 49</option>
+              <option>Mac 50</option>
+              <option>Mac 51</option>
+              <option>Mac 52</option>
+              <option>Mac 53</option>
+              <option>Mac 54</option>
+              <option>Mac 55</option>
+              <option>Mac 56</option>
+              <option>Mac 57</option>
+              <option>Max 58</option>
+              <option>Mac 59</option>
+              <option>Mac 60</option>
+              <option>Mac 61</option>
+              <option>Mac 62</option>
+              <option>Mac 63</option>
+              <option>Mac 64</option>
+              <option>Mac 65</option>
+              <option>Mac 66</option>
+              <option>Mac 67</option>
+              <option>Mac 68</option>
+              <option>Mac 69</option>
+              <option>Mac 70</option>
+              <option>Mac 71</option>
+              <option>Mac 72</option>
+            </optgroup>
+            <optgroup label="Avocado">
+              <option>Avo 1</option>
+              <option>Avo 2</option>
+              <option>Avo 3</option>
+              <option>Avo 4</option>
+              <option>Avo.5</option>
+              <option>Avo 6</option>
+              <option>Avo 7</option>
+              <option>Avo.8</option>
+              <option>Avo 9</option>
+              <option>Avo 10</option>
+              <option>Avo 11</option>
+              <option>Avo 12</option>
+              <option>Avo 13</option>
+              <option>Avo 14</option>
+              <option>Avo 15</option>
+              <option>Avo 16</option>
+              <option>Avo 17</option>
+              <option>Avo 18</option>
+              <option>Avo 19</option>
+              <option>Avo 20</option>
+              <option>Avo 21</option>
+              <option>Avo 22</option>
+              <option>Avo 23</option>
+              <option>Avo 24</option>
+              <option>Avo 25</option>
+              <option>Avo 26</option>
+              <option>Avo 27</option>
+              <option>Avo 28</option>
+              <option>Avo 29</option>
+              <option>Avo 30</option>
+              <option>Avo 31</option>
+              <option>Avo 32</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field"><label>Variety / Crop</label>
+          <select name="variety" required>
+            <option value="">Select crop</option>
+            <option>Macadamia</option>
+            <option>Avocado</option>
+          </select>
+        </div>
+        <div class="field"><label>Quantity</label><input type="text" name="quantity" required placeholder="e.g. 120 bins, 2.4 tonnes"></div>
+        <div class="field"><label>Destination</label><input type="text" name="destination" placeholder="e.g. Packhouse, Market"></div>
+        <div class="field"><label>Earliest Harvest Date Check (from spray/fert)</label><input type="text" name="ehd"></div>
+        <div class="field"><label>Recorded By</label>
+          <select name="recorder" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <button type="submit">Save Harvest Record</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Fuel Form -->
+    <div id="fuel" class="form-view">
+      <div class="success" id="fuelSuccess">Fuel record saved.</div>
+      <form onsubmit="saveForm(event, 'fuel')">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field"><label>Fuel Type</label>
+          <select name="fuelType" required>
+            <option value="Diesel">Diesel</option>
+            <option value="Petrol">Petrol</option>
+          </select>
+        </div>
+        <div class="field"><label>Equipment / Vehicle</label><input type="text" name="equipment" required></div>
+        <div class="field"><label>Litres</label><input type="number" name="litres" step="0.1" required></div>
+        <div class="field"><label>Hours / Odometer (optional)</label><input type="text" name="hours"></div>
+        <div class="field"><label>Filled By</label>
+          <select name="operator" required>
+            <option value="">Select name</option>
+            <option>Anthony Abednico</option>
+            <option>Asinate Koyamaibole</option>
+            <option>Bill Atyson</option>
+            <option>Bride Bill</option>
+            <option>Chris Coetzee</option>
+            <option>Fabian Young</option>
+            <option>James Ruben</option>
+            <option>Jason Halo</option>
+            <option>Jeffrey Zhou</option>
+            <option>Jialiang Ge</option>
+            <option>Joanna J</option>
+            <option>John S</option>
+            <option>Jolly L</option>
+            <option>Julian Walsae</option>
+            <option>Ken Liang</option>
+            <option>Lingda Wei</option>
+            <option>Maurice Joel</option>
+            <option>Michael Willie</option>
+            <option>Philimon Bakon</option>
+            <option>Sheng Wei</option>
+            <option>Steven Si</option>
+            <option>Wayne Taylor</option>
+            <option>Yiling Liu</option>
+            <option>Yuxiu Tang</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+        <button type="submit">Save Fuel Record</button>
+        <button type="button" class="secondary" onclick="showHome()">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Records View -->
+    <div id="records" class="form-view">
+      <h2 style="margin-bottom:12px;">Saved Records</h2>
+      <div id="recordsList" class="records-list">Loading...</div>
+      <button class="secondary" onclick="showHome()" style="margin-top:16px;">Back to Forms</button>
+      <button class="danger" onclick="clearAllData()" style="margin-top:8px;">Clear All Data on This Phone</button>
+    </div>
+  </div>
+
+  <footer>Kinagin Farm Forms • Data stored locally on this device</footer>
+
+  <script>
+    // Set today's date on all date fields
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+      if (!input.value) input.value = new Date().toISOString().split('T')[0];
+    });
+
+    function showHome() {
+      document.querySelectorAll('.form-view').forEach(el => el.classList.remove('active'));
+      document.getElementById('home').style.display = 'grid';
+      document.getElementById('backBtn').style.display = 'none';
+    }
+
+    function openForm(id) {
+      document.getElementById('home').style.display = 'none';
+      document.querySelectorAll('.form-view').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.getElementById('backBtn').style.display = 'block';
+      // Reset success messages
+      document.querySelectorAll('.success').forEach(el => el.style.display = 'none');
+    }
+
+    function previewPhoto(input, previewId) {
+      const preview = document.getElementById(previewId);
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function saveForm(event, type) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const record = { type, timestamp: new Date().toISOString(), id: Date.now() };
+      
+      for (let [key, value] of formData.entries()) {
+        if (key !== 'photo') record[key] = value;
+      }
+      
+      // Handle photo if present
+      const photoInput = form.querySelector('input[type="file"]');
+      if (photoInput && photoInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          record.photo = e.target.result;
+          storeRecord(record);
+          showSuccess(type);
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+      } else {
+        storeRecord(record);
+        showSuccess(type);
+      }
+    }
+
+    function storeRecord(record) {
+      const records = JSON.parse(localStorage.getItem('kinaginRecords') || '[]');
+      records.push(record);
+      localStorage.setItem('kinaginRecords', JSON.stringify(records));
+      
+      // Cloud sync if URL is configured
+      const syncUrl = localStorage.getItem('kinaginSyncUrl');
+      if (syncUrl) {
+        fetch(syncUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record),
+          mode: 'no-cors' // Apps Script often needs this
+        }).then(() => console.log('Synced to sheet'))
+          .catch(() => console.log('Sync failed – will stay local'));
+      }
+    }
+
+    function showSettings() {
+      document.getElementById('home').style.display = 'none';
+      document.querySelectorAll('.form-view').forEach(el => el.classList.remove('active'));
+      document.getElementById('settings').classList.add('active');
+      document.getElementById('backBtn').style.display = 'block';
+      const url = localStorage.getItem('kinaginSyncUrl') || '';
+      document.getElementById('syncUrl').value = url;
+    }
+
+    function saveSyncUrl() {
+      const url = document.getElementById('syncUrl').value.trim();
+      if (url) {
+        localStorage.setItem('kinaginSyncUrl', url);
+        alert('Sync URL saved. New records will go to the Google Sheet.');
+      } else {
+        localStorage.removeItem('kinaginSyncUrl');
+        alert('Sync disabled.');
+      }
+      showHome();
+    }
+
+    function showSuccess(type) {
+      const successEl = document.getElementById(type + 'Success');
+      if (successEl) {
+        successEl.style.display = 'block';
+        setTimeout(() => successEl.style.display = 'none', 4000);
+      }
+      event.target.reset();
+      // Reset date to today
+      const dateInput = event.target.querySelector('input[type="date"]');
+      if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+      document.querySelectorAll('.photo-preview').forEach(img => { img.style.display = 'none'; img.src = ''; });
+    }
+
+    function showRecords() {
+      document.getElementById('home').style.display = 'none';
+      document.querySelectorAll('.form-view').forEach(el => el.classList.remove('active'));
+      document.getElementById('records').classList.add('active');
+      document.getElementById('backBtn').style.display = 'block';
+      
+      const records = JSON.parse(localStorage.getItem('kinaginRecords') || '[]');
+      const list = document.getElementById('recordsList');
+      if (records.length === 0) {
+        list.innerHTML = '<p>No records saved yet.</p>';
+        return;
+      }
+      list.innerHTML = records.slice().reverse().map(r => `
+        <div class="record-item">
+          <strong>${r.type.toUpperCase()}</strong> • ${r.date || r.timestamp.split('T')[0]}<br>
+          ${r.block ? 'Block: ' + r.block + '<br>' : ''}
+          ${r.product ? 'Product: ' + r.product + '<br>' : ''}
+          ${r.trapId ? 'Trap: ' + r.trapId + ' • Count: ' + r.count + '<br>' : ''}
+          ${r.quantity ? 'Qty: ' + r.quantity + '<br>' : ''}
+          ${r.litres ? 'Litres: ' + r.litres + '<br>' : ''}
+          <small style="color:#666;">Saved ${new Date(r.timestamp).toLocaleString()}</small>
+        </div>
+      `).join('');
+    }
+
+    function exportData() {
+      const records = JSON.parse(localStorage.getItem('kinaginRecords') || '[]');
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kinagin-farm-records-' + new Date().toISOString().split('T')[0] + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearAllData() {
+      if (confirm('Delete all saved records on this phone? This cannot be undone.')) {
+        localStorage.removeItem('kinaginRecords');
+        showRecords();
+      }
+    }
+
+    // Register service worker for PWA offline support (basic)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
