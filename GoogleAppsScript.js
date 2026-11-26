@@ -53,7 +53,11 @@ function doPost(e) {
       fullSheet = ss.insertSheet('FullRecords');
       fullSheet.appendRow(['Timestamp', 'Type', 'Full JSON']);
     }
-    fullSheet.appendRow([data.timestamp || new Date().toISOString(), type, JSON.stringify(data)]);
+    const backup = {};
+    Object.keys(data).forEach(function (key) { backup[key] = data[key]; });
+    if (backup.photo && String(backup.photo).length > 200) backup.photo = '[photo stored on the form sheet]';
+    if (backup.signature && String(backup.signature).length > 200) backup.signature = '[signature stored on the form sheet]';
+    fullSheet.appendRow([data.timestamp || new Date().toISOString(), type, JSON.stringify(backup)]);
     
     return ContentService
       .createTextOutput(JSON.stringify({ status: 'ok', sheet: sheetName }))
@@ -75,13 +79,13 @@ function getHeadersForType(type) {
     case 'spray':
       return ['Timestamp', 'Date', 'Start Time', 'Block', 'Crop', 'Products', 'Batches', 'Rates', 'Withholding Periods', 'Target Pests', 'Sprayer', 'Wind Speed', 'Wind Direction', 'Applicator', 'Notes'];
     case 'insect':
-      return ['Timestamp', 'Date', 'Block', 'Trap ID', 'Pest', 'Count', 'Recorded By', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Trap ID', 'Insects', 'Counts', 'Photo', 'Recorded By', 'Notes'];
     case 'irrigation':
       return ['Timestamp', 'Date', 'Block', 'Duration (hrs)', 'Method', 'Operator', 'Notes'];
     case 'fertigation':
       return ['Timestamp', 'Date', 'Block', 'Product', 'Rate', 'Method', 'Wind Speed', 'Wind Direction', 'Operator', 'Notes'];
     case 'harvest':
-      return ['Timestamp', 'Date', 'Block', 'Variety', 'Quantity', 'Destination', 'Recorded By', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Bin Owner', 'Crop', 'Variety', 'Bin Numbers', 'Quantity', 'Destination', 'Recorded By', 'Notes'];
     case 'fuel':
       return ['Timestamp', 'Date', 'Fuel Type', 'Vehicle', 'Opening Total', 'Closing Total', 'Litres', 'Hours/Odo', 'Filled By', 'Notes', 'Signature'];
     default:
@@ -99,8 +103,8 @@ function buildRow(data, type) {
       ];
     case 'insect':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.trapId), safe(data.pest),
-        safe(data.count), safe(data.recorder), safe(data.notes)
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.trapId),
+        safe(data.pest), safe(data.count), safe(data.photo), safe(data.recorder), safe(data.notes)
       ];
     case 'irrigation':
       return [
@@ -114,8 +118,9 @@ function buildRow(data, type) {
       ];
     case 'harvest':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.variety), safe(data.quantity),
-        safe(data.destination), safe(data.recorder), safe(data.notes)
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.binOwner), safe(data.crop),
+        safe(data.variety), safe(data.binNumbers), safe(data.quantity), safe(data.destination),
+        safe(data.recorder), safe(data.notes)
       ];
     case 'fuel':
       return [
@@ -150,6 +155,18 @@ function buildValueMap(data, type) {
     map['Rates'] = safe(data.rate);
     map['Withholding Periods'] = safe(data.whp);
     map['Target Pests'] = safe(data.target);
+  }
+  if (type === 'insect') {
+    map['Pest'] = safe(data.pest);
+    map['Count'] = safe(data.count);
+    map['Insects'] = safe(data.pest);
+    map['Counts'] = safe(data.count);
+    map['Photo'] = safe(data.photo);
+  }
+  if (type === 'harvest') {
+    map['Bin Owner'] = safe(data.binOwner);
+    map['Crop'] = safe(data.crop);
+    map['Bin Numbers'] = safe(data.binNumbers);
   }
   return map;
 }

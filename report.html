@@ -132,7 +132,7 @@
       rows.forEach(function (row) {
         html += '<tr>';
         headers.forEach(function (h) {
-          html += '<td>' + cellHtml(row[h]) + '</td>';
+          html += '<td>' + cellHtml(row[h], h) + '</td>';
         });
         html += '</tr>';
       });
@@ -140,10 +140,13 @@
       area.innerHTML = html;
     }
 
-    function cellHtml(value) {
+    function cellHtml(value, header) {
       const text = String(value == null ? '' : value);
       if (text.indexOf('data:image') === 0) {
-        return '<img alt="Signature" src="' + text + '" style="height:48px; max-width:160px;">';
+        const style = header === 'Photo'
+          ? 'height:180px; max-width:260px;'
+          : 'height:48px; max-width:160px;';
+        return '<img alt="' + esc(header || 'image') + '" src="' + text + '" style="' + style + '">';
       }
       return esc(text);
     }

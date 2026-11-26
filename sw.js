@@ -1,6 +1,6 @@
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open('kinagin-v3').then(cache => {
+    caches.open('kinagin-v4').then(cache => {
       return cache.addAll(['./index.html', './manifest.json']);
     })
   );

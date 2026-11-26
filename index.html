@@ -331,9 +331,12 @@
           </select>
         </div>
         <div class="field"><label>Trap ID / Location</label><input type="text" name="trapId" required></div>
-        <div class="field"><label>Pest Type</label><input type="text" name="pest" placeholder="e.g. Fruit fly, Moth"></div>
-        <div class="field"><label>Count</label><input type="number" name="count" min="0" required></div>
-        <div class="field"><label>Photo of Trap</label><input type="file" name="photo" accept="image/*" capture="environment" onchange="previewPhoto(this, 'insectPreview')"></div>
+        <div class="field">
+          <label>Insects found</label>
+          <div id="insectRows"></div>
+          <button type="button" class="secondary" onclick="addInsectRow()">Add another insect</button>
+        </div>
+        <div class="field"><label>Photo of trap (required)</label><input type="file" name="photo" accept="image/*" capture="environment" onchange="previewPhoto(this, 'insectPreview')"></div>
         <img id="insectPreview" class="photo-preview" style="display:none;">
         <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
         <div class="field"><label>Recorded By</label>
@@ -737,15 +740,41 @@
             </optgroup>
           </select>
         </div>
-        <div class="field"><label>Variety / Crop</label>
-          <select name="variety" required>
+        <div class="field"><label>Bin Owner</label>
+          <select name="binOwner" required>
+            <option value="">Select owner</option>
+            <option>Kinagin</option>
+            <option>Donavin</option>
+            <option>Dorian</option>
+            <option>Sun Coast Macadamias</option>
+            <option>Alloway</option>
+          </select>
+        </div>
+        <div class="field"><label>Crop</label>
+          <select name="crop" id="harvestCrop" required onchange="harvestCropChanged()">
             <option value="">Select crop</option>
             <option>Macadamia</option>
             <option>Avocado</option>
           </select>
         </div>
-        <div class="field"><label>Quantity</label><input type="text" name="quantity" required placeholder="e.g. 120 bins, 2.4 tonnes"></div>
-        <div class="field"><label>Destination</label><input type="text" name="destination" placeholder="e.g. Packhouse, Market"></div>
+        <div class="field"><label>Variety</label>
+          <select name="variety" id="harvestVariety" required>
+            <option value="">Select crop first</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Bin numbers</label>
+          <div id="harvestBins"></div>
+          <button type="button" class="secondary" onclick="addHarvestBin()">Add another bin</button>
+        </div>
+        <div class="field"><label>Destination</label>
+          <select name="destination" required>
+            <option value="">Select destination</option>
+            <option>Processing Shed</option>
+            <option>Pack House</option>
+            <option>Cold Room</option>
+          </select>
+        </div>
         <div class="field"><label>Recorded By</label>
           <select name="recorder" required>
             <option value="">Select name</option>
@@ -985,6 +1014,107 @@
       document.getElementById('sprayPests').appendChild(row);
     }
 
+    const INSECT_OPTIONS = [
+      'Fruit spotting bug',
+      'Banana spotting bug',
+      'Queensland fruit fly',
+      'Green vegetable bug',
+      'Scale insects',
+      'Mealybug',
+      'Thrips',
+      'Mites',
+      'Macadamia nut borer',
+      'Macadamia seed weevil',
+      'Macadamia felted coccid',
+      'Macadamia flower caterpillar',
+      'Macadamia kernel grub',
+      'Macadamia lace bug',
+      'Macadamia leaf miner',
+      'Macadamia twig girdler',
+      'Flower looper',
+      'Banana fruit caterpillar',
+      'Red-shouldered leaf beetle',
+      'Leptocoris',
+      'Tea mosquito bug',
+      'Fall armyworm',
+      'Black citrus aphid',
+      'Leafroller',
+      'Loopers / chewing caterpillars',
+      'Greenhouse thrips',
+      'Red-banded thrips',
+      'Chilli thrips',
+      'Six-spotted mite',
+      'Leaf beetle',
+      'Garden weevil',
+      'Light brown apple moth',
+      'Avocado dimpling bug',
+      'Citrus blossom bug',
+      'Other'
+    ];
+
+    function insectOptionsHtml() {
+      return '<option value="">Select insect</option>' + INSECT_OPTIONS.map(function (name) {
+        return '<option>' + name + '</option>';
+      }).join('');
+    }
+
+    function addInsectRow() {
+      const row = document.createElement('div');
+      row.className = 'repeat-row insect-row';
+      row.innerHTML = '<select class="insect-name">' + insectOptionsHtml() + '</select>' +
+        '<input type="number" class="insect-count" min="0" step="1" placeholder="Count">' +
+        '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
+      document.getElementById('insectRows').appendChild(row);
+    }
+
+    const MAC_VARIETIES = ['MCT1', 'Dado', 'P', 'G', 'A16', 'A203', 'A38', '842', '344', '741'];
+    const AVO_VARIETIES = ['Hass', 'Shepard'];
+
+    function harvestCropChanged() {
+      const crop = document.getElementById('harvestCrop').value;
+      const select = document.getElementById('harvestVariety');
+      const list = crop === 'Avocado' ? AVO_VARIETIES : crop === 'Macadamia' ? MAC_VARIETIES : [];
+      select.innerHTML = '<option value="">' + (list.length ? 'Select variety' : 'Select crop first') + '</option>' +
+        list.map(function (name) { return '<option>' + name + '</option>'; }).join('');
+    }
+
+    function addHarvestBin() {
+      const row = document.createElement('div');
+      row.className = 'repeat-row harvest-bin';
+      row.innerHTML = '<input type="text" class="bin-no" placeholder="Bin number or serial">' +
+        '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
+      document.getElementById('harvestBins').appendChild(row);
+    }
+
+    function compressImage(file) {
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = function () {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = function () {
+            const sizes = [[900, 0.6], [640, 0.5], [480, 0.4], [360, 0.35]];
+            let dataUrl = '';
+            for (let i = 0; i < sizes.length; i++) {
+              const maxW = sizes[i][0];
+              const quality = sizes[i][1];
+              const scale = Math.min(1, maxW / img.width);
+              const canvas = document.createElement('canvas');
+              canvas.width = Math.max(1, Math.round(img.width * scale));
+              canvas.height = Math.max(1, Math.round(img.height * scale));
+              canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+              if (dataUrl.length < 42000) break;
+            }
+            resolve(dataUrl);
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function saveForm(event, type) {
       event.preventDefault();
       const form = event.target;
@@ -1026,6 +1156,30 @@
         alert('Select at least one block.');
         return;
       }
+      if (type === 'insect') {
+        const found = Array.from(document.querySelectorAll('.insect-row')).map(function (row) {
+          return {
+            name: row.querySelector('.insect-name').value,
+            count: row.querySelector('.insect-count').value.trim()
+          };
+        }).filter(function (item) { return item.name || item.count !== ''; });
+        if (!found.length || found.some(function (item) { return !item.name || item.count === ''; })) {
+          alert('Each insect needs a name and a count.');
+          return;
+        }
+        const photoInput = form.querySelector('input[type="file"]');
+        if (!photoInput || !photoInput.files[0]) {
+          alert('A photo of the trap is required.');
+          return;
+        }
+      }
+      if (type === 'harvest') {
+        const bins = Array.from(document.querySelectorAll('.bin-no')).map(function (input) { return input.value.trim(); }).filter(Boolean);
+        if (!bins.length) {
+          alert('Enter at least one bin number.');
+          return;
+        }
+      }
       const formData = new FormData(form);
       const record = { type, timestamp: new Date().toISOString(), id: Date.now() };
       
@@ -1056,20 +1210,47 @@
       if (type === 'irrigation') {
         record.block = selectedBlocks('irrigationBlocks').join(', ');
       }
-      
-      // Handle photo if present
-      const photoInput = form.querySelector('input[type="file"]');
-      if (photoInput && photoInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          record.photo = e.target.result;
-          storeRecord(record);
-          showSuccess(type, form);
-        };
-        reader.readAsDataURL(photoInput.files[0]);
-      } else {
+      if (type === 'insect') {
+        const found = Array.from(document.querySelectorAll('.insect-row')).map(function (row) {
+          return {
+            name: row.querySelector('.insect-name').value,
+            count: row.querySelector('.insect-count').value.trim()
+          };
+        }).filter(function (item) { return item.name; });
+        record.insects = found;
+        record.pest = found.map(function (item) { return item.name + ' x ' + item.count; }).join('; ');
+        record.count = found.map(function (item) { return item.count; }).join('; ');
+      }
+      if (type === 'harvest') {
+        const bins = Array.from(document.querySelectorAll('.bin-no')).map(function (input) { return input.value.trim(); }).filter(Boolean);
+        record.bins = bins;
+        record.binNumbers = bins.join('; ');
+        record.quantity = String(bins.length);
+      }
+
+      function finishSave() {
         storeRecord(record);
         showSuccess(type, form);
+      }
+
+      const photoInput = form.querySelector('input[type="file"]');
+      if (photoInput && photoInput.files[0]) {
+        const photoFile = photoInput.files[0];
+        const done = function (dataUrl) {
+          record.photo = dataUrl;
+          finishSave();
+        };
+        if (type === 'insect') {
+          compressImage(photoFile).then(done).catch(function () {
+            alert('Could not read the trap photo. Try another photo.');
+          });
+        } else {
+          const reader = new FileReader();
+          reader.onload = function (e) { done(e.target.result); };
+          reader.readAsDataURL(photoFile);
+        }
+      } else {
+        finishSave();
       }
     }
 
@@ -1202,6 +1383,15 @@
         addSprayPest();
       }
       if (type === 'irrigation') clearChecks('irrigationBlocks');
+      if (type === 'insect') {
+        document.getElementById('insectRows').innerHTML = '';
+        addInsectRow();
+      }
+      if (type === 'harvest') {
+        document.getElementById('harvestBins').innerHTML = '';
+        addHarvestBin();
+        harvestCropChanged();
+      }
       document.querySelectorAll('.photo-preview').forEach(img => { img.style.display = 'none'; img.src = ''; });
     }
 
@@ -1252,6 +1442,8 @@
     renderBlockPicker('irrigationBlocks');
     addSprayProduct();
     addSprayPest();
+    addInsectRow();
+    addHarvestBin();
 
     // Register service worker for PWA offline support (basic)
     if ('serviceWorker' in navigator) {
