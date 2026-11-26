@@ -18,6 +18,13 @@
     .form-card:active { transform: scale(0.98); }
     .form-card h2 { font-size: 1.1rem; color: #2d6a4f; margin-bottom: 4px; }
     .form-card p { font-size: 0.85rem; color: #666; }
+    .block-picker { max-height: 220px; overflow: auto; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 8px 10px; }
+    .block-picker .group { font-size: 0.78rem; font-weight: 700; color: #2d6a4f; margin: 8px 0 4px; }
+    .block-picker label { font-weight: 500; display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+    .block-picker input { width: auto; }
+    .repeat-row { background: #f7faf7; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .repeat-row input { margin-bottom: 8px; }
+    .mini { background: #6c757d; margin-top: 0; padding: 8px 12px; width: auto; }
     .form-view { display: none; }
     .form-view.active { display: block; }
     .field { margin-bottom: 16px; }
@@ -101,121 +108,8 @@
       <form onsubmit="saveForm(event, 'spray')">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field"><label>Start Time</label><input type="time" name="startTime" required></div>
-        <div class="field"><label>Finish Time</label><input type="time" name="finishTime"></div>
-        <div class="field"><label>Block / Location</label>
-          <select name="block" required>
-            <option value="">Select block</option>
-            <optgroup label="Macadamia">
-              <option>Mac 1a</option>
-              <option>Mac 1b</option>
-              <option>Mac 2a</option>
-              <option>Mac 2b</option>
-              <option>Mac 3</option>
-              <option>Mac 4</option>
-              <option>Mac 5</option>
-              <option>mac 6</option>
-              <option>Mac 7</option>
-              <option>Mac 8</option>
-              <option>Mac 9</option>
-              <option>Mac 10</option>
-              <option>Mac 11</option>
-              <option>Mac 12</option>
-              <option>Mac 13</option>
-              <option>Mac 14</option>
-              <option>Mac 15</option>
-              <option>Mac 16</option>
-              <option>Mac 17</option>
-              <option>Mac 18</option>
-              <option>Mac 19</option>
-              <option>Mac 20</option>
-              <option>Mac 21</option>
-              <option>Mac 22</option>
-              <option>Mac 23</option>
-              <option>Mac 24</option>
-              <option>Mac 25</option>
-              <option>Mac 26</option>
-              <option>Mac 27</option>
-              <option>Mac 28</option>
-              <option>Mac 29</option>
-              <option>Mac 30</option>
-              <option>Mac 31</option>
-              <option>Mac 32</option>
-              <option>Mac 33</option>
-              <option>Mac 34</option>
-              <option>Mac 35</option>
-              <option>Mac 36</option>
-              <option>Mac 37</option>
-              <option>Mac 38</option>
-              <option>Mac 39</option>
-              <option>Mac 40</option>
-              <option>Mac 41</option>
-              <option>Mac 42</option>
-              <option>Mac 43</option>
-              <option>Mac 44</option>
-              <option>Mac 45</option>
-              <option>Mac 46</option>
-              <option>Mac 47</option>
-              <option>Mac 48</option>
-              <option>Mac 49</option>
-              <option>Mac 50</option>
-              <option>Mac 51</option>
-              <option>Mac 52</option>
-              <option>Mac 53</option>
-              <option>Mac 54</option>
-              <option>Mac 55</option>
-              <option>Mac 56</option>
-              <option>Mac 57</option>
-              <option>Max 58</option>
-              <option>Mac 59</option>
-              <option>Mac 60</option>
-              <option>Mac 61</option>
-              <option>Mac 62</option>
-              <option>Mac 63</option>
-              <option>Mac 64</option>
-              <option>Mac 65</option>
-              <option>Mac 66</option>
-              <option>Mac 67</option>
-              <option>Mac 68</option>
-              <option>Mac 69</option>
-              <option>Mac 70</option>
-              <option>Mac 71</option>
-              <option>Mac 72</option>
-            </optgroup>
-            <optgroup label="Avocado">
-              <option>Avo 1</option>
-              <option>Avo 2</option>
-              <option>Avo 3</option>
-              <option>Avo 4</option>
-              <option>Avo.5</option>
-              <option>Avo 6</option>
-              <option>Avo 7</option>
-              <option>Avo.8</option>
-              <option>Avo 9</option>
-              <option>Avo 10</option>
-              <option>Avo 11</option>
-              <option>Avo 12</option>
-              <option>Avo 13</option>
-              <option>Avo 14</option>
-              <option>Avo 15</option>
-              <option>Avo 16</option>
-              <option>Avo 17</option>
-              <option>Avo 18</option>
-              <option>Avo 19</option>
-              <option>Avo 20</option>
-              <option>Avo 21</option>
-              <option>Avo 22</option>
-              <option>Avo 23</option>
-              <option>Avo 24</option>
-              <option>Avo 25</option>
-              <option>Avo 26</option>
-              <option>Avo 27</option>
-              <option>Avo 28</option>
-              <option>Avo 29</option>
-              <option>Avo 30</option>
-              <option>Avo 31</option>
-              <option>Avo 32</option>
-            </optgroup>
-          </select>
+        <div class="field"><label>Blocks (tick all that were sprayed)</label>
+          <div id="sprayBlocks" class="block-picker"></div>
         </div>
         <div class="field"><label>Crop / Variety</label>
           <select name="crop" required>
@@ -224,12 +118,23 @@
             <option>Avocado</option>
           </select>
         </div>
-        <div class="field"><label>Product Name</label><input type="text" name="product" required></div>
-        <div class="field"><label>Batch Number</label><input type="text" name="batch"></div>
-        <div class="field"><label>Target Pest / Disease</label><input type="text" name="target"></div>
-        <div class="field"><label>Rate (per ha or as labelled)</label><input type="text" name="rate" required></div>
-        <div class="field"><label>Quantity Applied</label><input type="text" name="quantity" required></div>
-        <div class="field"><label>Equipment Used</label><input type="text" name="equipment" placeholder="e.g. Airblast sprayer"></div>
+        <div class="field">
+          <label>Products</label>
+          <div id="sprayProducts"></div>
+          <button type="button" class="secondary" onclick="addSprayProduct()">Add another product</button>
+        </div>
+        <div class="field">
+          <label>Target pests</label>
+          <div id="sprayPests"></div>
+          <button type="button" class="secondary" onclick="addSprayPest()">Add another pest</button>
+        </div>
+        <div class="field"><label>Sprayer</label>
+          <select name="equipment" required>
+            <option value="">Select sprayer</option>
+            <option>Sullivan</option>
+            <option>Sullivan Avo Jet</option>
+          </select>
+        </div>
         <div class="field"><label>Wind Speed</label>
           <select name="windSpeed">
             <option value="">Select speed</option>
@@ -268,7 +173,6 @@
             <option>North West</option>
           </select>
         </div>
-        <div class="field"><label>Withholding Period (days) or Earliest Harvest Date</label><input type="text" name="whp"></div>
         <div class="field"><label>Applicator Name</label>
           <select name="applicator" required>
             <option value="">Select name</option>
@@ -471,124 +375,17 @@
       <div class="success" id="irrigationSuccess">Irrigation record saved.</div>
       <form onsubmit="saveForm(event, 'irrigation')">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
-        <div class="field"><label>Block</label>
-          <select name="block" required>
-            <option value="">Select block</option>
-            <optgroup label="Macadamia">
-              <option>Mac 1a</option>
-              <option>Mac 1b</option>
-              <option>Mac 2a</option>
-              <option>Mac 2b</option>
-              <option>Mac 3</option>
-              <option>Mac 4</option>
-              <option>Mac 5</option>
-              <option>mac 6</option>
-              <option>Mac 7</option>
-              <option>Mac 8</option>
-              <option>Mac 9</option>
-              <option>Mac 10</option>
-              <option>Mac 11</option>
-              <option>Mac 12</option>
-              <option>Mac 13</option>
-              <option>Mac 14</option>
-              <option>Mac 15</option>
-              <option>Mac 16</option>
-              <option>Mac 17</option>
-              <option>Mac 18</option>
-              <option>Mac 19</option>
-              <option>Mac 20</option>
-              <option>Mac 21</option>
-              <option>Mac 22</option>
-              <option>Mac 23</option>
-              <option>Mac 24</option>
-              <option>Mac 25</option>
-              <option>Mac 26</option>
-              <option>Mac 27</option>
-              <option>Mac 28</option>
-              <option>Mac 29</option>
-              <option>Mac 30</option>
-              <option>Mac 31</option>
-              <option>Mac 32</option>
-              <option>Mac 33</option>
-              <option>Mac 34</option>
-              <option>Mac 35</option>
-              <option>Mac 36</option>
-              <option>Mac 37</option>
-              <option>Mac 38</option>
-              <option>Mac 39</option>
-              <option>Mac 40</option>
-              <option>Mac 41</option>
-              <option>Mac 42</option>
-              <option>Mac 43</option>
-              <option>Mac 44</option>
-              <option>Mac 45</option>
-              <option>Mac 46</option>
-              <option>Mac 47</option>
-              <option>Mac 48</option>
-              <option>Mac 49</option>
-              <option>Mac 50</option>
-              <option>Mac 51</option>
-              <option>Mac 52</option>
-              <option>Mac 53</option>
-              <option>Mac 54</option>
-              <option>Mac 55</option>
-              <option>Mac 56</option>
-              <option>Mac 57</option>
-              <option>Max 58</option>
-              <option>Mac 59</option>
-              <option>Mac 60</option>
-              <option>Mac 61</option>
-              <option>Mac 62</option>
-              <option>Mac 63</option>
-              <option>Mac 64</option>
-              <option>Mac 65</option>
-              <option>Mac 66</option>
-              <option>Mac 67</option>
-              <option>Mac 68</option>
-              <option>Mac 69</option>
-              <option>Mac 70</option>
-              <option>Mac 71</option>
-              <option>Mac 72</option>
-            </optgroup>
-            <optgroup label="Avocado">
-              <option>Avo 1</option>
-              <option>Avo 2</option>
-              <option>Avo 3</option>
-              <option>Avo 4</option>
-              <option>Avo.5</option>
-              <option>Avo 6</option>
-              <option>Avo 7</option>
-              <option>Avo.8</option>
-              <option>Avo 9</option>
-              <option>Avo 10</option>
-              <option>Avo 11</option>
-              <option>Avo 12</option>
-              <option>Avo 13</option>
-              <option>Avo 14</option>
-              <option>Avo 15</option>
-              <option>Avo 16</option>
-              <option>Avo 17</option>
-              <option>Avo 18</option>
-              <option>Avo 19</option>
-              <option>Avo 20</option>
-              <option>Avo 21</option>
-              <option>Avo 22</option>
-              <option>Avo 23</option>
-              <option>Avo 24</option>
-              <option>Avo 25</option>
-              <option>Avo 26</option>
-              <option>Avo 27</option>
-              <option>Avo 28</option>
-              <option>Avo 29</option>
-              <option>Avo 30</option>
-              <option>Avo 31</option>
-              <option>Avo 32</option>
-            </optgroup>
-          </select>
+        <div class="field"><label>Blocks (tick all that were irrigated)</label>
+          <div id="irrigationBlocks" class="block-picker"></div>
         </div>
         <div class="field"><label>Duration (hours)</label><input type="number" name="duration" step="0.1" required></div>
-        <div class="field"><label>Volume (litres or mm)</label><input type="text" name="volume"></div>
-        <div class="field"><label>Method</label><input type="text" name="method" placeholder="e.g. Drip, Sprinkler"></div>
+        <div class="field"><label>Method</label>
+          <select name="method" required>
+            <option value="">Select method</option>
+            <option>Sprinklers</option>
+            <option>Drippers</option>
+          </select>
+        </div>
         <div class="field"><label>Operator</label>
           <select name="operator" required>
             <option value="">Select name</option>
@@ -949,7 +746,6 @@
         </div>
         <div class="field"><label>Quantity</label><input type="text" name="quantity" required placeholder="e.g. 120 bins, 2.4 tonnes"></div>
         <div class="field"><label>Destination</label><input type="text" name="destination" placeholder="e.g. Packhouse, Market"></div>
-        <div class="field"><label>Earliest Harvest Date Check (from spray/fert)</label><input type="text" name="ehd"></div>
         <div class="field"><label>Recorded By</label>
           <select name="recorder" required>
             <option value="">Select name</option>
@@ -1145,6 +941,50 @@
       }
     }
 
+    const BLOCK_GROUPS = [
+      ['Macadamia', ['Mac 1a','Mac 1b','Mac 2a','Mac 2b','Mac 3','Mac 4','Mac 5','mac 6','Mac 7','Mac 8','Mac 9','Mac 10','Mac 11','Mac 12','Mac 13','Mac 14','Mac 15','Mac 16','Mac 17','Mac 18','Mac 19','Mac 20','Mac 21','Mac 22','Mac 23','Mac 24','Mac 25','Mac 26','Mac 27','Mac 28','Mac 29','Mac 30','Mac 31','Mac 32','Mac 33','Mac 34','Mac 35','Mac 36','Mac 37','Mac 38','Mac 39','Mac 40','Mac 41','Mac 42','Mac 43','Mac 44','Mac 45','Mac 46','Mac 47','Mac 48','Mac 49','Mac 50','Mac 51','Mac 52','Mac 53','Mac 54','Mac 55','Mac 56','Mac 57','Max 58','Mac 59','Mac 60','Mac 61','Mac 62','Mac 63','Mac 64','Mac 65','Mac 66','Mac 67','Mac 68','Mac 69','Mac 70','Mac 71','Mac 72']],
+      ['Avocado', ['Avo 1','Avo 2','Avo 3','Avo 4','Avo.5','Avo 6','Avo 7','Avo.8','Avo 9','Avo 10','Avo 11','Avo 12','Avo 13','Avo 14','Avo 15','Avo 16','Avo 17','Avo 18','Avo 19','Avo 20','Avo 21','Avo 22','Avo 23','Avo 24','Avo 25','Avo 26','Avo 27','Avo 28','Avo 29','Avo 30','Avo 31','Avo 32']]
+    ];
+
+    function renderBlockPicker(containerId) {
+      const el = document.getElementById(containerId);
+      if (!el || el.dataset.ready) return;
+      el.dataset.ready = '1';
+      el.innerHTML = BLOCK_GROUPS.map(function (group) {
+        const boxes = group[1].map(function (name) {
+          return '<label><input type="checkbox" value="' + name + '"> ' + name + '</label>';
+        }).join('');
+        return '<div class="group">' + group[0] + '</div>' + boxes;
+      }).join('');
+    }
+
+    function selectedBlocks(containerId) {
+      return Array.from(document.querySelectorAll('#' + containerId + ' input:checked')).map(function (input) { return input.value; });
+    }
+
+    function clearChecks(containerId) {
+      document.querySelectorAll('#' + containerId + ' input').forEach(function (input) { input.checked = false; });
+    }
+
+    function addSprayProduct() {
+      const row = document.createElement('div');
+      row.className = 'repeat-row spray-product';
+      row.innerHTML = '<input type="text" placeholder="Product name" class="p-name">' +
+        '<input type="text" placeholder="Batch number" class="p-batch">' +
+        '<input type="text" placeholder="Rate" class="p-rate">' +
+        '<input type="text" placeholder="Withholding period (days)" class="p-whp">' +
+        '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
+      document.getElementById('sprayProducts').appendChild(row);
+    }
+
+    function addSprayPest() {
+      const row = document.createElement('div');
+      row.className = 'repeat-row spray-pest';
+      row.innerHTML = '<input type="text" placeholder="Target pest or disease" class="pest-name">' +
+        '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
+      document.getElementById('sprayPests').appendChild(row);
+    }
+
     function saveForm(event, type) {
       event.preventDefault();
       const form = event.target;
@@ -1159,6 +999,33 @@
           return;
         }
       }
+      if (type === 'spray') {
+        if (!selectedBlocks('sprayBlocks').length) {
+          alert('Select at least one block.');
+          return;
+        }
+        const products = Array.from(document.querySelectorAll('.spray-product')).map(function (row) {
+          return {
+            product: row.querySelector('.p-name').value.trim(),
+            batch: row.querySelector('.p-batch').value.trim(),
+            rate: row.querySelector('.p-rate').value.trim(),
+            whp: row.querySelector('.p-whp').value.trim()
+          };
+        }).filter(function (item) { return item.product || item.batch || item.rate || item.whp; });
+        if (!products.length || products.some(function (item) { return !item.product || !item.rate; })) {
+          alert('Each product needs a name and a rate.');
+          return;
+        }
+        const pests = Array.from(document.querySelectorAll('.pest-name')).map(function (input) { return input.value.trim(); }).filter(Boolean);
+        if (!pests.length) {
+          alert('Add at least one target pest.');
+          return;
+        }
+      }
+      if (type === 'irrigation' && !selectedBlocks('irrigationBlocks').length) {
+        alert('Select at least one block.');
+        return;
+      }
       const formData = new FormData(form);
       const record = { type, timestamp: new Date().toISOString(), id: Date.now() };
       
@@ -1167,6 +1034,27 @@
       }
       if (type === 'fuel') {
         record.signature = document.getElementById('fuelSignature').toDataURL('image/jpeg', 0.6);
+      }
+      if (type === 'spray') {
+        const products = Array.from(document.querySelectorAll('.spray-product')).map(function (row) {
+          return {
+            product: row.querySelector('.p-name').value.trim(),
+            batch: row.querySelector('.p-batch').value.trim(),
+            rate: row.querySelector('.p-rate').value.trim(),
+            whp: row.querySelector('.p-whp').value.trim()
+          };
+        }).filter(function (item) { return item.product; });
+        const pests = Array.from(document.querySelectorAll('.pest-name')).map(function (input) { return input.value.trim(); }).filter(Boolean);
+        record.block = selectedBlocks('sprayBlocks').join(', ');
+        record.products = products;
+        record.product = products.map(function (item) { return item.product; }).join('; ');
+        record.batch = products.map(function (item) { return item.batch; }).join('; ');
+        record.rate = products.map(function (item) { return item.rate; }).join('; ');
+        record.whp = products.map(function (item) { return item.whp; }).join('; ');
+        record.target = pests.join(', ');
+      }
+      if (type === 'irrigation') {
+        record.block = selectedBlocks('irrigationBlocks').join(', ');
       }
       
       // Handle photo if present
@@ -1306,6 +1194,14 @@
         clearFuelSignature();
         fuelVehicleChanged();
       }
+      if (type === 'spray') {
+        clearChecks('sprayBlocks');
+        document.getElementById('sprayProducts').innerHTML = '';
+        document.getElementById('sprayPests').innerHTML = '';
+        addSprayProduct();
+        addSprayPest();
+      }
+      if (type === 'irrigation') clearChecks('irrigationBlocks');
       document.querySelectorAll('.photo-preview').forEach(img => { img.style.display = 'none'; img.src = ''; });
     }
 
@@ -1351,6 +1247,11 @@
         showRecords();
       }
     }
+
+    renderBlockPicker('sprayBlocks');
+    renderBlockPicker('irrigationBlocks');
+    addSprayProduct();
+    addSprayPest();
 
     // Register service worker for PWA offline support (basic)
     if ('serviceWorker' in navigator) {

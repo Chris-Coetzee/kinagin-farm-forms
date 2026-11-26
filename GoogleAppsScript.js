@@ -73,15 +73,15 @@ function safe(value) {
 function getHeadersForType(type) {
   switch(type) {
     case 'spray':
-      return ['Timestamp', 'Date', 'Start Time', 'Finish Time', 'Block', 'Crop', 'Product', 'Batch', 'Target', 'Rate', 'Quantity', 'Equipment', 'Wind Speed', 'Wind Direction', 'WHP/EHD', 'Applicator', 'Notes'];
+      return ['Timestamp', 'Date', 'Start Time', 'Block', 'Crop', 'Products', 'Batches', 'Rates', 'Withholding Periods', 'Target Pests', 'Sprayer', 'Wind Speed', 'Wind Direction', 'Applicator', 'Notes'];
     case 'insect':
       return ['Timestamp', 'Date', 'Block', 'Trap ID', 'Pest', 'Count', 'Recorded By', 'Notes'];
     case 'irrigation':
-      return ['Timestamp', 'Date', 'Block', 'Duration (hrs)', 'Volume', 'Method', 'Operator', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Duration (hrs)', 'Method', 'Operator', 'Notes'];
     case 'fertigation':
       return ['Timestamp', 'Date', 'Block', 'Product', 'Rate', 'Method', 'Wind Speed', 'Wind Direction', 'Operator', 'Notes'];
     case 'harvest':
-      return ['Timestamp', 'Date', 'Block', 'Variety', 'Quantity', 'Destination', 'EHD Check', 'Recorded By', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Variety', 'Quantity', 'Destination', 'Recorded By', 'Notes'];
     case 'fuel':
       return ['Timestamp', 'Date', 'Fuel Type', 'Vehicle', 'Opening Total', 'Closing Total', 'Litres', 'Hours/Odo', 'Filled By', 'Notes', 'Signature'];
     default:
@@ -93,9 +93,9 @@ function buildRow(data, type) {
   switch(type) {
     case 'spray':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.startTime), safe(data.finishTime), safe(data.block),
-        safe(data.crop), safe(data.product), safe(data.batch), safe(data.target), safe(data.rate),
-        safe(data.quantity), safe(data.equipment), safe(data.windSpeed), safe(data.windDirection), safe(data.whp), safe(data.applicator), safe(data.notes)
+        safe(data.timestamp), safe(data.date), safe(data.startTime), safe(data.block), safe(data.crop),
+        safe(data.product), safe(data.batch), safe(data.rate), safe(data.whp), safe(data.target),
+        safe(data.equipment), safe(data.windSpeed), safe(data.windDirection), safe(data.applicator), safe(data.notes)
       ];
     case 'insect':
       return [
@@ -104,7 +104,7 @@ function buildRow(data, type) {
       ];
     case 'irrigation':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.duration), safe(data.volume),
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.duration),
         safe(data.method), safe(data.operator), safe(data.notes)
       ];
     case 'fertigation':
@@ -115,7 +115,7 @@ function buildRow(data, type) {
     case 'harvest':
       return [
         safe(data.timestamp), safe(data.date), safe(data.block), safe(data.variety), safe(data.quantity),
-        safe(data.destination), safe(data.ehd), safe(data.recorder), safe(data.notes)
+        safe(data.destination), safe(data.recorder), safe(data.notes)
       ];
     case 'fuel':
       return [
@@ -136,6 +136,20 @@ function buildValueMap(data, type) {
   if (type === 'fuel') {
     map['Equipment'] = safe(data.equipment);
     map['Vehicle'] = safe(data.equipment);
+  }
+  if (type === 'spray') {
+    map['Product'] = safe(data.product);
+    map['Batch'] = safe(data.batch);
+    map['Target'] = safe(data.target);
+    map['Rate'] = safe(data.rate);
+    map['Equipment'] = safe(data.equipment);
+    map['WHP/EHD'] = safe(data.whp);
+    map['Sprayer'] = safe(data.equipment);
+    map['Products'] = safe(data.product);
+    map['Batches'] = safe(data.batch);
+    map['Rates'] = safe(data.rate);
+    map['Withholding Periods'] = safe(data.whp);
+    map['Target Pests'] = safe(data.target);
   }
   return map;
 }
