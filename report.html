@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinagin Farm – Print Reports</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #2d6a4f; }
+    .controls { background: #e8f5e9; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+    label { margin-right: 15px; font-weight: bold; }
+    select, input, button { padding: 8px 12px; margin: 5px; font-size: 14px; }
+    button { background: #2d6a4f; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #1b4332; }
+    .print-btn { background: #1565c0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+    th { background: #2d6a4f; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    @media print {
+      .controls, button, .no-print { display: none; }
+      body { background: white; margin: 0; }
+      .container { box-shadow: none; }
+    }
+    .note { color: #666; font-size: 13px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Kinagin Farm – Printable Reports</h1>
+    <p class="note">This page is for viewing and printing records. Data comes from your Google Sheet (export or share as needed).</p>
+
+    <div class="controls no-print">
+      <label>Report Type:</label>
+      <select id="reportType">
+        <option value="spray">Spray Records</option>
+        <option value="insect">Insect Reports</option>
+        <option value="irrigation">Irrigation</option>
+        <option value="fertigation">Fertigation</option>
+        <option value="harvest">Harvesting</option>
+        <option value="fuel">Diesel & Petrol</option>
+      </select>
+
+      <label>From Date:</label>
+      <input type="date" id="fromDate">
+
+      <label>To Date:</label>
+      <input type="date" id="toDate">
+
+      <button onclick="loadSample()">Load Sample Data</button>
+      <button class="print-btn" onclick="window.print()">Print Report</button>
+    </div>
+
+    <div id="reportArea">
+      <p>Select a report type and dates, then click “Load Sample Data” to preview (replace with real data export later).</p>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for preview – replace with real Google Sheet export or Apps Script fetch later
+    const sampleData = {
+      spray: [
+        { date: '2026-11-20', block: 'Mac 1a', crop: 'Macadamia', product: 'Example Spray', rate: '2 L/ha', quantity: '40 L', applicator: 'Chris Coetzee', windSpeed: '5', windDirection: 'North East', notes: 'Morning spray' },
+        { date: '2026-11-21', block: 'Avo 3', crop: 'Avocado', product: 'Another Product', rate: '1.5 L/ha', quantity: '25 L', applicator: 'Wayne Taylor', windSpeed: '3', windDirection: 'East', notes: '' }
+      ],
+      insect: [
+        { date: '2026-11-20', block: 'Mac 5', trapId: 'T12', pest: 'Fruit fly', count: '8', recorder: 'James Ruben', notes: 'High count' }
+      ],
+      irrigation: [
+        { date: '2026-11-19', block: 'Mac 10', duration: '4.5', volume: '12000 L', method: 'Drip', operator: 'Michael Willie', notes: '' }
+      ],
+      fertigation: [
+        { date: '2026-11-18', block: 'Avo 7', product: 'NPK', rate: '20 kg', method: 'Fertigation', operator: 'Ken Liang', notes: '' }
+      ],
+      harvest: [
+        { date: '2026-11-15', block: 'Mac 2a', variety: 'Macadamia', quantity: '45 bins', destination: 'Packhouse', recorder: 'Chris Coetzee', notes: '' }
+      ],
+      fuel: [
+        { date: '2026-11-22', fuelType: 'Diesel', equipment: 'Tractor 1', litres: '85', operator: 'Bill Atyson', notes: '' }
+      ]
+    };
+
+    function loadSample() {
+      const type = document.getElementById('reportType').value;
+      const from = document.getElementById('fromDate').value;
+      const to = document.getElementById('toDate').value;
+      const data = sampleData[type] || [];
+
+      let html = `<h2>${type.charAt(0).toUpperCase() + type.slice(1)} Report</h2>`;
+      if (from || to) html += `<p>Period: ${from || 'Start'} to ${to || 'End'}</p>`;
+
+      if (data.length === 0) {
+        document.getElementById('reportArea').innerHTML = '<p>No sample data for this type.</p>';
+        return;
+      }
+
+      html += '<table><thead><tr>';
+      const headers = Object.keys(data[0]);
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+
+      data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(h => html += `<td>${row[h] || ''}</td>`);
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+
+      document.getElementById('reportArea').innerHTML = html;
+    }
+
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('toDate').value = today;
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    document.getElementById('fromDate').value = weekAgo.toISOString().split('T')[0];
+  </script>
+</body>
+</html>
