@@ -8,6 +8,8 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const type = (data.type || 'Unknown').toLowerCase();
+    if (data.photo) data.photo = storeImage(data.photo, type + '-' + Date.now() + '.jpg');
+    if (data.signature) data.signature = storeImage(data.signature, 'signature-' + Date.now() + '.jpg');
     
     const sheetNames = {
       'spray': 'Spray Records',
@@ -70,6 +72,24 @@ function doPost(e) {
   }
 }
 
+function storeImage(dataUrl, filename) {
+  var text = String(dataUrl || '');
+  if (text.indexOf('data:') !== 0) return text;
+  try {
+    var parts = text.split(',');
+    var mimeMatch = parts[0].match(/data:([^;]+)/);
+    var mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    var blob = Utilities.newBlob(Utilities.base64Decode(parts[1]), mime, filename);
+    var folders = DriveApp.getFoldersByName('Kinagin Farm Photos');
+    var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder('Kinagin Farm Photos');
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return 'https://lh3.googleusercontent.com/d/' + file.getId();
+  } catch (err) {
+    return text;
+  }
+}
+
 function safe(value) {
   return (value === undefined || value === null) ? '' : value;
 }
@@ -77,13 +97,13 @@ function safe(value) {
 function getHeadersForType(type) {
   switch(type) {
     case 'spray':
-      return ['Timestamp', 'Date', 'Start Time', 'Block', 'Crop', 'Products', 'Batches', 'Rates', 'Withholding Periods', 'Target Pests', 'Sprayer', 'Wind Speed', 'Wind Direction', 'Applicator', 'Notes'];
+      return ['Timestamp', 'Date', 'Start Time', 'Block', 'Crop', 'Spray Type', 'Products', 'Batches', 'Rates', 'Withholding Periods', 'Target Pests', 'Sprayer', 'Wind Speed', 'Wind Direction', 'Applicator', 'Notes'];
     case 'insect':
-      return ['Timestamp', 'Date', 'Block', 'Trap ID', 'Insects', 'Counts', 'Photo', 'Recorded By', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Crop', 'Trap ID', 'Insects', 'Counts', 'Photo', 'Recorded By', 'Notes'];
     case 'irrigation':
-      return ['Timestamp', 'Date', 'Block', 'Duration (hrs)', 'Method', 'Operator', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Crop', 'Duration (hrs)', 'Method', 'Operator', 'Notes'];
     case 'fertigation':
-      return ['Timestamp', 'Date', 'Block', 'Product', 'Rate', 'Method', 'Wind Speed', 'Wind Direction', 'Operator', 'Notes'];
+      return ['Timestamp', 'Date', 'Block', 'Crop', 'Product', 'Rate', 'Method', 'Operator', 'Notes'];
     case 'harvest':
       return ['Timestamp', 'Date', 'Block', 'Bin Owner', 'Crop', 'Variety', 'Bin Numbers', 'Quantity', 'Destination', 'Recorded By', 'Notes'];
     case 'fuel':
@@ -97,24 +117,24 @@ function buildRow(data, type) {
   switch(type) {
     case 'spray':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.startTime), safe(data.block), safe(data.crop),
+        safe(data.timestamp), safe(data.date), safe(data.startTime), safe(data.block), safe(data.crop), safe(data.sprayType),
         safe(data.product), safe(data.batch), safe(data.rate), safe(data.whp), safe(data.target),
         safe(data.equipment), safe(data.windSpeed), safe(data.windDirection), safe(data.applicator), safe(data.notes)
       ];
     case 'insect':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.trapId),
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.crop), safe(data.trapId),
         safe(data.pest), safe(data.count), safe(data.photo), safe(data.recorder), safe(data.notes)
       ];
     case 'irrigation':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.duration),
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.crop), safe(data.duration),
         safe(data.method), safe(data.operator), safe(data.notes)
       ];
     case 'fertigation':
       return [
-        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.product), safe(data.rate),
-        safe(data.method), safe(data.windSpeed), safe(data.windDirection), safe(data.operator), safe(data.notes)
+        safe(data.timestamp), safe(data.date), safe(data.block), safe(data.crop), safe(data.product), safe(data.rate),
+        safe(data.method), safe(data.operator), safe(data.notes)
       ];
     case 'harvest':
       return [
@@ -162,6 +182,10 @@ function buildValueMap(data, type) {
     map['Insects'] = safe(data.pest);
     map['Counts'] = safe(data.count);
     map['Photo'] = safe(data.photo);
+    map['Crop'] = safe(data.crop);
+  }
+  if (type === 'spray') {
+    map['Spray Type'] = safe(data.sprayType);
   }
   if (type === 'harvest') {
     map['Bin Owner'] = safe(data.binOwner);

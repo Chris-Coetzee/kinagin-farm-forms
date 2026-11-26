@@ -24,6 +24,10 @@
     .block-picker input { width: auto; }
     .repeat-row { background: #f7faf7; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
     .repeat-row input { margin-bottom: 8px; }
+    .product-targets { max-height: 180px; overflow: auto; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+    .product-targets label, .checkline { font-weight: 500; display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+    .product-targets input, .checkline input { width: auto; }
+    .note { color: #666; font-size: 13px; margin: 6px 0 0; }
     .mini { background: #6c757d; margin-top: 0; padding: 8px 12px; width: auto; }
     .form-view { display: none; }
     .form-view.active { display: block; }
@@ -111,11 +115,19 @@
         <div class="field"><label>Blocks (tick all that were sprayed)</label>
           <div id="sprayBlocks" class="block-picker"></div>
         </div>
-        <div class="field"><label>Crop / Variety</label>
-          <select name="crop" required>
-            <option value="">Select crop</option>
+        <div class="field"><label>Crop</label>
+          <select name="crop" id="sprayCrop" required>
+            <option value="">Select blocks first</option>
             <option>Macadamia</option>
             <option>Avocado</option>
+          </select>
+          <p id="sprayCropNote" class="note"></p>
+        </div>
+        <div class="field"><label>Spray type</label>
+          <select name="sprayType" id="sprayType" required onchange="sprayTypeChanged()">
+            <option value="">Select type</option>
+            <option>Insecticide</option>
+            <option>Herbicide</option>
           </select>
         </div>
         <div class="field">
@@ -123,16 +135,12 @@
           <div id="sprayProducts"></div>
           <button type="button" class="secondary" onclick="addSprayProduct()">Add another product</button>
         </div>
-        <div class="field">
-          <label>Target pests</label>
-          <div id="sprayPests"></div>
-          <button type="button" class="secondary" onclick="addSprayPest()">Add another pest</button>
-        </div>
         <div class="field"><label>Sprayer</label>
           <select name="equipment" required>
             <option value="">Select sprayer</option>
             <option>Sullivan</option>
             <option>Sullivan Avo Jet</option>
+            <option>Herbicide sprayer</option>
           </select>
         </div>
         <div class="field"><label>Wind Speed</label>
@@ -216,7 +224,7 @@
       <form onsubmit="saveForm(event, 'insect')">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field"><label>Block</label>
-          <select name="block" required>
+          <select name="block" id="insectBlock" required onchange="blockSelectChanged('insectBlock','insectCrop','insectCropNote')">
             <option value="">Select block</option>
             <optgroup label="Macadamia">
               <option>Mac 1a</option>
@@ -329,6 +337,10 @@
               <option>Avo 32</option>
             </optgroup>
           </select>
+        </div>
+        <div class="field"><label>Crop</label>
+          <input name="crop" id="insectCrop" readonly placeholder="Filled in from the block">
+          <p id="insectCropNote" class="note"></p>
         </div>
         <div class="field"><label>Trap ID / Location</label><input type="text" name="trapId" required></div>
         <div class="field">
@@ -381,6 +393,10 @@
         <div class="field"><label>Blocks (tick all that were irrigated)</label>
           <div id="irrigationBlocks" class="block-picker"></div>
         </div>
+        <div class="field"><label>Crop</label>
+          <input name="crop" id="irrigationCrop" readonly placeholder="Filled in from the blocks">
+          <p id="irrigationCropNote" class="note"></p>
+        </div>
         <div class="field"><label>Duration (hours)</label><input type="number" name="duration" step="0.1" required></div>
         <div class="field"><label>Method</label>
           <select name="method" required>
@@ -430,7 +446,7 @@
       <form onsubmit="saveForm(event, 'fertigation')">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field"><label>Block</label>
-          <select name="block" required>
+          <select name="block" id="fertigationBlock" required onchange="blockSelectChanged('fertigationBlock','fertigationCrop','fertigationCropNote')">
             <option value="">Select block</option>
             <optgroup label="Macadamia">
               <option>Mac 1a</option>
@@ -544,47 +560,13 @@
             </optgroup>
           </select>
         </div>
+        <div class="field"><label>Crop</label>
+          <input name="crop" id="fertigationCrop" readonly placeholder="Filled in from the block">
+          <p id="fertigationCropNote" class="note"></p>
+        </div>
         <div class="field"><label>Product</label><input type="text" name="product" required></div>
         <div class="field"><label>Rate / Quantity</label><input type="text" name="rate" required></div>
         <div class="field"><label>Method of Application</label><input type="text" name="method" value="Fertigation"></div>
-        <div class="field"><label>Wind Speed (if applicable)</label>
-          <select name="windSpeed">
-            <option value="">Select speed</option>
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-            <option>5</option>
-            <option>6</option>
-            <option>7</option>
-            <option>8</option>
-            <option>9</option>
-            <option>10</option>
-            <option>11</option>
-            <option>12</option>
-            <option>13</option>
-            <option>14</option>
-            <option>15</option>
-            <option>16</option>
-            <option>17</option>
-            <option>18</option>
-            <option>19</option>
-            <option>20</option>
-          </select>
-        </div>
-        <div class="field"><label>Wind Direction (if applicable)</label>
-          <select name="windDirection">
-            <option value="">Select direction</option>
-            <option>North</option>
-            <option>North East</option>
-            <option>East</option>
-            <option>South East</option>
-            <option>South</option>
-            <option>South West</option>
-            <option>West</option>
-            <option>North West</option>
-          </select>
-        </div>
         <div class="field"><label>Operator</label>
           <select name="operator" required>
             <option value="">Select name</option>
@@ -626,7 +608,7 @@
       <form onsubmit="saveForm(event, 'harvest')">
         <div class="field"><label>Harvest Date</label><input type="date" name="date" required></div>
         <div class="field"><label>Block</label>
-          <select name="block" required>
+          <select name="block" id="harvestBlock" required onchange="blockSelectChanged('harvestBlock','harvestCrop','harvestCropNote')">
             <option value="">Select block</option>
             <optgroup label="Macadamia">
               <option>Mac 1a</option>
@@ -756,6 +738,7 @@
             <option>Macadamia</option>
             <option>Avocado</option>
           </select>
+          <p id="harvestCropNote" class="note"></p>
         </div>
         <div class="field"><label>Variety</label>
           <select name="variety" id="harvestVariety" required>
@@ -981,10 +964,48 @@
       el.dataset.ready = '1';
       el.innerHTML = BLOCK_GROUPS.map(function (group) {
         const boxes = group[1].map(function (name) {
-          return '<label><input type="checkbox" value="' + name + '"> ' + name + '</label>';
+          return '<label><input type="checkbox" value="' + name + '" onchange="onBlocksChanged(\'' + containerId + '\')"> ' + name + '</label>';
         }).join('');
         return '<div class="group">' + group[0] + '</div>' + boxes;
       }).join('');
+    }
+
+    function onBlocksChanged(containerId) {
+      const names = selectedBlocks(containerId);
+      if (containerId === 'sprayBlocks') applyAutoCrop(names, 'sprayCrop', 'sprayCropNote');
+      if (containerId === 'irrigationBlocks') applyAutoCrop(names, 'irrigationCrop', 'irrigationCropNote');
+    }
+
+    function blockSelectChanged(selectId, cropId, noteId) {
+      const value = document.getElementById(selectId).value;
+      applyAutoCrop(value ? [value] : [], cropId, noteId);
+    }
+
+    function cropFromNames(names) {
+      if (!names.length) return '';
+      const mac = names.every(function (name) { return /^m/i.test(String(name).trim()); });
+      const avo = names.every(function (name) { return /^a/i.test(String(name).trim()); });
+      if (mac) return 'Macadamia';
+      if (avo) return 'Avocado';
+      return '';
+    }
+
+    function applyAutoCrop(names, cropSelectId, noteId) {
+      const crop = cropFromNames(names);
+      const field = document.getElementById(cropSelectId);
+      const note = noteId ? document.getElementById(noteId) : null;
+      if (names.length && !crop) {
+        if (note) note.textContent = 'Choose either macadamia blocks or avocado blocks, not both.';
+        if (field) field.value = '';
+        if (cropSelectId === 'harvestCrop') harvestCropChanged();
+        return '';
+      }
+      if (note) note.textContent = crop ? 'Crop set from the block: ' + crop : '';
+      if (field && field.value !== crop) {
+        field.value = crop;
+        if (cropSelectId === 'harvestCrop') harvestCropChanged();
+      }
+      return crop;
     }
 
     function selectedBlocks(containerId) {
@@ -1002,8 +1023,30 @@
         '<input type="text" placeholder="Batch number" class="p-batch">' +
         '<input type="text" placeholder="Rate" class="p-rate">' +
         '<input type="text" placeholder="Withholding period (days)" class="p-whp">' +
+        '<div class="product-targets"></div>' +
         '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
       document.getElementById('sprayProducts').appendChild(row);
+      fillProductTargets(row);
+    }
+
+    function fillProductTargets(row) {
+      const box = row.querySelector('.product-targets');
+      const type = document.getElementById('sprayType') ? document.getElementById('sprayType').value : '';
+      if (type === 'Insecticide') {
+        box.innerHTML = '<div class="group">Insects for this product</div>' + INSECT_OPTIONS.map(function (name) {
+          return '<label><input type="checkbox" class="target-check" value="' + name + '"> ' + name + '</label>';
+        }).join('');
+      } else if (type === 'Herbicide') {
+        box.innerHTML = '<div class="group">Target</div>' +
+          '<label><input type="checkbox" class="target-check" value="Weeds"> Weeds</label>' +
+          '<label><input type="checkbox" class="target-check" value="Grass"> Grass</label>';
+      } else {
+        box.innerHTML = '<p class="note">Choose Insecticide or Herbicide first.</p>';
+      }
+    }
+
+    function sprayTypeChanged() {
+      document.querySelectorAll('.spray-product').forEach(fillProductTargets);
     }
 
     function addSprayPest() {
@@ -1011,7 +1054,8 @@
       row.className = 'repeat-row spray-pest';
       row.innerHTML = '<input type="text" placeholder="Target pest or disease" class="pest-name">' +
         '<button type="button" class="mini" onclick="this.parentElement.remove()">Remove</button>';
-      document.getElementById('sprayPests').appendChild(row);
+      const host = document.getElementById('sprayPests');
+      if (host) host.appendChild(row);
     }
 
     const INSECT_OPTIONS = [
@@ -1134,21 +1178,25 @@
           alert('Select at least one block.');
           return;
         }
+        if (!document.getElementById('sprayCrop').value) {
+          alert('Select macadamia blocks or avocado blocks, not a mix.');
+          return;
+        }
+        if (!document.getElementById('sprayType').value) {
+          alert('Choose Insecticide or Herbicide.');
+          return;
+        }
         const products = Array.from(document.querySelectorAll('.spray-product')).map(function (row) {
           return {
             product: row.querySelector('.p-name').value.trim(),
             batch: row.querySelector('.p-batch').value.trim(),
             rate: row.querySelector('.p-rate').value.trim(),
-            whp: row.querySelector('.p-whp').value.trim()
+            whp: row.querySelector('.p-whp').value.trim(),
+            targets: Array.from(row.querySelectorAll('.target-check:checked')).map(function (input) { return input.value; })
           };
-        }).filter(function (item) { return item.product || item.batch || item.rate || item.whp; });
-        if (!products.length || products.some(function (item) { return !item.product || !item.rate; })) {
-          alert('Each product needs a name and a rate.');
-          return;
-        }
-        const pests = Array.from(document.querySelectorAll('.pest-name')).map(function (input) { return input.value.trim(); }).filter(Boolean);
-        if (!pests.length) {
-          alert('Add at least one target pest.');
+        }).filter(function (item) { return item.product || item.batch || item.rate || item.whp || item.targets.length; });
+        if (!products.length || products.some(function (item) { return !item.product || !item.rate || !item.targets.length; })) {
+          alert('Each product needs a name, a rate, and at least one target.');
           return;
         }
       }
@@ -1195,17 +1243,18 @@
             product: row.querySelector('.p-name').value.trim(),
             batch: row.querySelector('.p-batch').value.trim(),
             rate: row.querySelector('.p-rate').value.trim(),
-            whp: row.querySelector('.p-whp').value.trim()
+            whp: row.querySelector('.p-whp').value.trim(),
+            targets: Array.from(row.querySelectorAll('.target-check:checked')).map(function (input) { return input.value; })
           };
         }).filter(function (item) { return item.product; });
-        const pests = Array.from(document.querySelectorAll('.pest-name')).map(function (input) { return input.value.trim(); }).filter(Boolean);
         record.block = selectedBlocks('sprayBlocks').join(', ');
+        record.crop = document.getElementById('sprayCrop').value;
         record.products = products;
         record.product = products.map(function (item) { return item.product; }).join('; ');
         record.batch = products.map(function (item) { return item.batch; }).join('; ');
         record.rate = products.map(function (item) { return item.rate; }).join('; ');
         record.whp = products.map(function (item) { return item.whp; }).join('; ');
-        record.target = pests.join(', ');
+        record.target = products.map(function (item) { return item.product + ': ' + item.targets.join(', '); }).join('; ');
       }
       if (type === 'irrigation') {
         record.block = selectedBlocks('irrigationBlocks').join(', ');
@@ -1317,6 +1366,8 @@
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.strokeStyle = '#1a1a1a';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       let drawing = false;
       function pos(e) {
         const r = canvas.getBoundingClientRect();
@@ -1352,7 +1403,12 @@
 
     function clearFuelSignature() {
       const canvas = document.getElementById('fuelSignature');
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
       delete canvas.dataset.signed;
     }
 
@@ -1378,9 +1434,9 @@
       if (type === 'spray') {
         clearChecks('sprayBlocks');
         document.getElementById('sprayProducts').innerHTML = '';
-        document.getElementById('sprayPests').innerHTML = '';
         addSprayProduct();
-        addSprayPest();
+        const note = document.getElementById('sprayCropNote');
+        if (note) note.textContent = '';
       }
       if (type === 'irrigation') clearChecks('irrigationBlocks');
       if (type === 'insect') {
@@ -1441,7 +1497,6 @@
     renderBlockPicker('sprayBlocks');
     renderBlockPicker('irrigationBlocks');
     addSprayProduct();
-    addSprayPest();
     addInsectRow();
     addHarvestBin();
 

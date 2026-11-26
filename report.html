@@ -142,10 +142,12 @@
 
     function cellHtml(value, header) {
       const text = String(value == null ? '' : value);
-      if (text.indexOf('data:image') === 0) {
+      const isImage = text.indexOf('data:image') === 0 ||
+        ((header === 'Photo' || header === 'Signature') && /^https?:\/\//.test(text));
+      if (isImage) {
         const style = header === 'Photo'
           ? 'height:180px; max-width:260px;'
-          : 'height:48px; max-width:160px;';
+          : 'height:70px; max-width:180px; background:#fff;';
         return '<img alt="' + esc(header || 'image') + '" src="' + text + '" style="' + style + '">';
       }
       return esc(text);
